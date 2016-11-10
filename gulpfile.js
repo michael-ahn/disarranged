@@ -8,14 +8,14 @@ const sourcemaps = require('gulp-sourcemaps');
 const buffer = require('vinyl-buffer');
 const paths = {
     allSrcTs: 'src/**/*.ts',
-    htmlPages: ['src/*.html'],
+    staticFiles: ['src/*.html', 'src/*.css'],
     destDir: 'docs'
 };
 
 gulp.task('clean', () => del(paths.destDir + '/*'));
 
 gulp.task('copy-html', () =>
-    gulp.src(paths.htmlPages)
+    gulp.src(paths.staticFiles)
         .pipe(gulp.dest(paths.destDir))
 );
 
