@@ -1,7 +1,7 @@
 {
   "name": "disarranged",
   "version": "1.0.0",
-  "description": "CS488 Final Project",
+  "description": "Action Game",
   "main": "index.js",
   "directories": {
     "doc": "docs"
