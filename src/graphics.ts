@@ -18,7 +18,7 @@ export class Graphics {
 
     private static _canvas: HTMLCanvasElement;
     private static _gl: WebGLRenderingContext;
-    private static _attemptedInit: boolean;
+    private static _attemptedInit: boolean = false;
 
     static getContext() : WebGLRenderingContext {
         if (!Graphics._attemptedInit) {

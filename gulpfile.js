@@ -19,7 +19,7 @@ gulp.task('copy-html', () =>
         .pipe(gulp.dest(paths.destDir))
 );
 
-gulp.task('build', ['clean', 'copy-html'], () =>
+gulp.task('build-debug', ['clean', 'copy-html'], () =>
     browserify({
         basedir: '.',
         debug: true,
@@ -41,8 +41,36 @@ gulp.task('build', ['clean', 'copy-html'], () =>
     .pipe(gulp.dest(paths.destDir))
 );
 
+gulp.task('build', ['clean', 'copy-html'], () =>
+    browserify({
+        basedir: '.',
+        debug: false,
+        entries: ['src/main.ts'],
+        cache: {},
+        packageCache: {}
+    })
+    .plugin(tsify)
+    .transform('babelify', {
+        presets: ['es2015'],
+        extensions: ['.ts']
+    })
+    .bundle()
+    .pipe(source('bundle.js'))
+    .pipe(buffer())
+    .pipe(uglify())
+    .pipe(gulp.dest(paths.destDir))
+);
+
+gulp.task('watch-debug', () => {
+  gulp.watch(paths.allSrcTs, ['build-debug']);
+});
+
 gulp.task('watch', () => {
   gulp.watch(paths.allSrcTs, ['build']);
 });
 
-gulp.task('default', ['watch', 'build']);
+gulp.task('main-debug', ['watch-debug', 'build-debug']);
+
+gulp.task('main', ['watch', 'build']);
+
+gulp.task('default', ['main']);
