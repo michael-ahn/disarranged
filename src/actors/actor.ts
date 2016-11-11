@@ -14,26 +14,10 @@
 // limitations under the License.
 //
 
-import { ArenaActor } from "./actors/arena_actor"
-import { Graphics } from "./graphics"
+export abstract class Actor {
 
-function init() {
-    let gl = Graphics.getContext();
-    if (!gl) {
-        alert("Unable to initialize WebGL. Your browser may not support it.");
-        return;
+    public print() {
+        console.log("Hello from Actor!");
     }
 
-    // Set clear color to opaque black
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    // Enable depth test
-    gl.enable(gl.DEPTH_TEST);
-    // Clear color and depth buffers
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    // Set the resolution of the context
-    let blah = new ArenaActor();
-    blah.print();
 }
-
-init();
