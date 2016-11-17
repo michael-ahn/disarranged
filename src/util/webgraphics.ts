@@ -20,7 +20,7 @@ export class WebGraphics {
     private static _gl: WebGLRenderingContext;
     private static _attemptedInit: boolean = false;
 
-    static getContext(): WebGLRenderingContext {
+    public static getContext(): WebGLRenderingContext {
         if (!WebGraphics._attemptedInit) {
             WebGraphics._attemptedInit = true;
             WebGraphics.initialize();
@@ -28,11 +28,21 @@ export class WebGraphics {
         return WebGraphics._gl;
     }
 
-    static getCanvas(): HTMLCanvasElement {
+    public static getCanvas(): HTMLCanvasElement {
         if (!WebGraphics._canvas) {
             WebGraphics._canvas = <HTMLCanvasElement>document.getElementById("glcanvas");
         }
         return WebGraphics._canvas;
+    }
+
+    public static resizeToFullScreen(gl: WebGLRenderingContext) {
+        let width = gl.canvas.clientWidth;
+        let height = gl.canvas.clientHeight;
+        if (gl.canvas.width != width || gl.canvas.height != height) {
+            gl.canvas.width = width;
+            gl.canvas.height = height;
+            gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+        }
     }
 
     private static initialize() {
@@ -51,21 +61,4 @@ export class WebGraphics {
 
         WebGraphics._gl = gl;
     }
-
-    static resizeToFullScreen() {
-        let canvas = WebGraphics.getCanvas();
-        let gl = WebGraphics.getContext();
-        if (!canvas || !gl) {
-            return;
-        }
-
-        // Set canvas to full screen
-        canvas.width = document.body.clientWidth;
-        canvas.height = document.body.clientHeight;
-
-         // Set resolution of WebGraphics context
-        gl.viewport(0, 0, canvas.width, canvas.height);
-    }
-
-
 }

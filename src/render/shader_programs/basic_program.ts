@@ -14,18 +14,30 @@
 // limitations under the License.
 //
 
-import { Actor } from './actor';
+import { Program } from './program';
 
-export class ArenaActor extends Actor {
+export class BasicProgram extends Program {
 
-    public readonly renderStyle = Actor.renderStyles.basic;
+    private static vertexSource = `
+        attribute vec4 a_pos;
 
-    public constructor(gl: WebGLRenderingContext) {
-        super(gl, null);
+        void main() {
+            gl_Position = a_pos;
+        }
+    `;
+
+    private static fragmentSource = `
+        precision mediump float;
+
+        void main() {
+            gl_FragColor = vec4(1, 0, 0.5, 1);
+        }
+    `;
+
+    public attrCount = 1;
+
+    constructor(gl: WebGLRenderingContext) {
+        super(gl, BasicProgram.vertexSource, BasicProgram.fragmentSource, ['a_pos']);
     }
-
-    public draw(gl: WebGLRenderingContext) {
-        
-    }
-
+    
 }

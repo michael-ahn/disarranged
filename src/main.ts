@@ -14,12 +14,13 @@
 // limitations under the License.
 //
 
-import { WebGraphics } from "./util/webgraphics"
-import { ArenaActor } from "./actors/arena_actor"
+import { WebGraphics } from "./util/webgraphics";
+import { Renderer } from "./render/renderer";
 
 // For testing purposes
 var testTime = 0;
 var testColour = 0;
+var renderer: Renderer;
 
 function init() {
     // Create and initialize the WebGL context
@@ -29,20 +30,11 @@ function init() {
         return;
     }
 
-    // Set canvas to render to full screen
-    WebGraphics.resizeToFullScreen();
-    // Have handler to resize to full screen on window resize after 0.5s
-    var resizeEventId: number | null = null;
-    window.addEventListener('resize', function onWindowResized(event) {
-        if (resizeEventId)
-            window.clearTimeout(resizeEventId);
-        resizeEventId = window.setTimeout(WebGraphics.resizeToFullScreen, 500);
-    });
-
-    // Set defaults for rendering context
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.enable(gl.DEPTH_TEST);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    // Create a renderer to draw the game graphics
+    renderer = new Renderer(gl);
+    if (!renderer.isReady) {
+        return;
+    }
 
     // Start the game loop
     gameTick();
@@ -51,12 +43,16 @@ function init() {
 function gameTick() {
     window.requestAnimationFrame(gameTick);
 
+    let gl = WebGraphics.getContext();
+    WebGraphics.resizeToFullScreen(gl);
+
     testTime += 0.01666667;
     testColour = 0.5 * Math.sin(0.62831853 * testTime) + 0.5;
 
-    let gl = WebGraphics.getContext();
     gl.clearColor(0, testColour, 0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
+
+    renderer.drawScene();
 }
 
 init();

@@ -16,16 +16,23 @@
 
 import { Actor } from './actor';
 
-export class ArenaActor extends Actor {
+export class BasicActor extends Actor {
 
     public readonly renderStyle = Actor.renderStyles.basic;
 
+    private static data = new Float32Array([
+        0, 0,
+        0, 0.5,
+        0.7, 0,
+    ]);
+
     public constructor(gl: WebGLRenderingContext) {
-        super(gl, null);
+        super(gl, BasicActor.data);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
     }
 
     public draw(gl: WebGLRenderingContext) {
-        
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
 
 }

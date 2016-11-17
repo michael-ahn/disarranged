@@ -16,8 +16,22 @@
 
 export abstract class Actor {
 
-    public print() {
-        console.log("Hello from Actor!");
-    }
+    // Available render styles for the actors to be drawn in
+    public static readonly renderStyles = {
+        basic: 0,
+    };
 
+    // The render style the actor is drawn in
+    public abstract readonly renderStyle: number;
+
+    // Draws the actor for the given WebGL context
+    public abstract draw(gl: WebGLRenderingContext): void;
+
+    protected readonly vbo: WebGLBuffer;
+
+    protected constructor(gl: WebGLRenderingContext, vboData: Float32Array) {
+        this.vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, vboData, gl.STATIC_DRAW);
+    }
 }
