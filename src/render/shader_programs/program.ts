@@ -31,7 +31,8 @@ export abstract class Program {
     // Whether the glsl program is valid after construction
     public readonly isValid: boolean;
 
-    // Uniform location of model matrix
+    // General uniform locations
+    public uniformViewProject: WebGLUniformLocation;
     public uniformModel: WebGLUniformLocation;
 
     // Compiles the given shader source code into the specified shader type

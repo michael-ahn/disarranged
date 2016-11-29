@@ -17,16 +17,16 @@
 import { WebGraphics } from "./util/webgraphics";
 import { Keyboard, KeyCode } from "./util/keyboard";
 import { Renderer } from "./render/renderer";
-
-import { Actor } from "./actors/actor";
-import { BasicActor } from "./actors/basic_actor";
+import { Game } from "./game/game";
+import { Camera } from "./render/camera";
 
 // For testing purposes
 var testTime = 0;
 
 var renderer: Renderer;
 var keyboard: Keyboard;
-var actors: Actor[];
+var game: Game;
+var camera: Camera;
 
 function init() {
     // Create and initialize the WebGL context
@@ -35,11 +35,6 @@ function init() {
         alert("Unable to initialize WebGL. Your browser may not support it.");
         return;
     }
-
-    // Create actors
-    actors = [
-        new BasicActor(gl)
-    ];
 
     // Create a renderer to draw the game graphics
     renderer = new Renderer(gl);
@@ -50,6 +45,12 @@ function init() {
     // Initialize user input
     keyboard = new Keyboard();
 
+    // Create game
+    game = new Game(gl);
+
+    // Create a camera
+    camera = new Camera(gl);
+
     // Start the game loop
     gameTick();
 }
@@ -58,7 +59,9 @@ function gameTick() {
     window.requestAnimationFrame(gameTick);
 
     let gl = WebGraphics.getContext();
-    WebGraphics.resizeToFullScreen(gl);
+    if (WebGraphics.resizeToFullScreen(gl)) {
+        camera.buildProjection();
+    }
 
     testTime += 0.01666667;
 
@@ -83,7 +86,13 @@ function gameTick() {
     gl.clearColor(r, g, b, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    renderer.drawScene(actors);
+    game.tick(keyboard);
+
+    camera.eyePosition.set([0, 0, 3]);
+    camera.lookPosition.set([0, 0, 0]);
+    camera.update();
+
+    renderer.drawScene(game.actors, camera);
 }
 
 init();

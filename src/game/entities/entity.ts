@@ -14,13 +14,13 @@
 // limitations under the License.
 //
 
-import { vec3 } from "../../lib/gl-matrix";
+import { vec3, mat4 } from "../../lib/gl-matrix";
 import { Actor } from "../../actors/actor";
 
 export abstract class Entity {
 
     // The visual for the entity
-    protected actor: Actor;
+    public readonly actor: Actor;
 
     // The current position in world space
     public readonly position = vec3.create();
@@ -28,13 +28,16 @@ export abstract class Entity {
     // The distance travelled per game tick
     public speed = 0;
 
-    protected constructor() {
+    protected constructor(actor: Actor) {
+        this.actor = actor;
     }
 
     // Moves at the current speed for the given direction vector.
     // dir is assumed to be normalized.
     public move(dir: vec3) {
         vec3.scaleAndAdd(this.position, this.position, dir, this.speed);
+
+        mat4.fromTranslation(this.actor.modelTransform, this.position);
     }
 
 }

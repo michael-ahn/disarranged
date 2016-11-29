@@ -19,12 +19,13 @@ import { Program } from "./program";
 export class BasicProgram extends Program {
 
     private static vertexSource = `
+        uniform mat4 u_viewProject;
         uniform mat4 u_model;
 
         attribute vec4 a_pos;
 
         void main() {
-            gl_Position = u_model * a_pos;
+            gl_Position = u_viewProject * u_model * a_pos;
         }
     `;
 
@@ -43,6 +44,7 @@ export class BasicProgram extends Program {
         
         // Get uniform locations
         if (this.isValid) {
+            this.uniformViewProject = gl.getUniformLocation(this.glsl, "u_viewProject");
             this.uniformModel = gl.getUniformLocation(this.glsl, "u_model");
         }
     }

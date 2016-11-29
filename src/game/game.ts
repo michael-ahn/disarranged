@@ -18,25 +18,40 @@ import { Keyboard, KeyCode } from "../util/keyboard";
 import { Entity } from "./entities/entity";
 import { Player } from "./entities/player";
 
-export abstract class Game {
+import { Actor } from "../actors/actor";
+import { BasicActor } from "../actors/basic_actor";
 
-    private input: Keyboard;
+export class Game {
 
     private entities: Entity[];
     private player: Player;
 
-    public constructor(input: Keyboard) {
-        this.input = input;
+    public actors: Actor[];
 
-        this.entities = [];
-        this.player = new Player();
+    private readonly gl: WebGLRenderingContext;
+
+    public constructor(gl: WebGLRenderingContext) {
+        this.gl = gl;
+        this.init();
     }
 
-    public tick() {
-        let verticalInput = this.input.isKeyDown(KeyCode.UP) ? 1 : (this.input.isKeyDown(KeyCode.DOWN) ? -1 : 0);
-        let horizontalInput = this.input.isKeyDown(KeyCode.LEFT) ? -1 : (this.input.isKeyDown(KeyCode.RIGHT) ? 1 : 0);
+    // Progresses the game state by one tick
+    public tick(input: Keyboard) {
+        let verticalInput = input.isKeyDown(KeyCode.UP) ? 1 : (input.isKeyDown(KeyCode.DOWN) ? -1 : 0);
+        let horizontalInput = input.isKeyDown(KeyCode.LEFT) ? -1 : (input.isKeyDown(KeyCode.RIGHT) ? 1 : 0);
         this.player.moveWithInputs(verticalInput, horizontalInput);
 
+    }
+
+    // Reset the state of the game
+    private init() {
+        this.actors = [
+            new BasicActor(this.gl)
+        ];
+
+        this.player = new Player(this.actors[0]);
+
+        this.entities = [this.player];
     }
 
 }

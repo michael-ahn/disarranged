@@ -16,15 +16,16 @@
 
 import { Entity } from "./entity";
 import { vec3 } from "../../lib/gl-matrix";
+import { BasicActor } from "../../actors/basic_actor";
 
 export class Player extends Entity {
 
     // The current walking direction of the player, based on input
     private readonly inputDirection = vec3.create();
 
-    public constructor() {
-        super();
-        this.speed = 0.001;
+    public constructor(actor: BasicActor) {
+        super(actor);
+        this.speed = 0.005;
     }
 
     public moveWithInputs(verticalInput: number, horizontalInput: number) {

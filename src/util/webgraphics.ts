@@ -16,37 +16,44 @@
 
 export class WebGraphics {
 
-    private static _canvas: HTMLCanvasElement;
-    private static _gl: WebGLRenderingContext;
-    private static _attemptedInit: boolean = false;
+    private static canvas: HTMLCanvasElement;
+    private static gl: WebGLRenderingContext;
+    private static attemptedInit: boolean = false;
 
+    // Get the WebGLRenderingContext for the application. Returns null if
+    // WebGL is not supported.
     public static getContext(): WebGLRenderingContext {
-        if (!WebGraphics._attemptedInit) {
-            WebGraphics._attemptedInit = true;
+        if (!WebGraphics.attemptedInit) {
+            WebGraphics.attemptedInit = true;
             WebGraphics.initialize();
         }
-        return WebGraphics._gl;
+        return WebGraphics.gl;
     }
 
+    // Get the canvas for the application.
     public static getCanvas(): HTMLCanvasElement {
-        if (!WebGraphics._canvas) {
-            WebGraphics._canvas = <HTMLCanvasElement>document.getElementById("glcanvas");
+        if (!WebGraphics.canvas) {
+            WebGraphics.canvas = <HTMLCanvasElement>document.getElementById("glcanvas");
         }
-        return WebGraphics._canvas;
+        return WebGraphics.canvas;
     }
 
-    public static resizeToFullScreen(gl: WebGLRenderingContext) {
+    // Resizes the WebGL viewport to match the dimensions of the canvas.
+    // Returns true if the viewport dimensions are changed from this operation.
+    public static resizeToFullScreen(gl: WebGLRenderingContext): boolean {
         let width = gl.canvas.clientWidth;
         let height = gl.canvas.clientHeight;
         if (gl.canvas.width != width || gl.canvas.height != height) {
             gl.canvas.width = width;
             gl.canvas.height = height;
             gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+            return true;
         }
+        return false;
     }
 
     private static initialize() {
-        WebGraphics._gl = null;
+        WebGraphics.gl = null;
 
         let canvas = WebGraphics.getCanvas();
         if (!canvas) {
@@ -59,6 +66,6 @@ export class WebGraphics {
             return;
         }
 
-        WebGraphics._gl = gl;
+        WebGraphics.gl = gl;
     }
 }

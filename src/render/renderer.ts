@@ -17,6 +17,7 @@
 import { Actor } from "../actors/actor";
 import { Program } from "./shader_programs/program";
 import { BasicProgram } from "./shader_programs/basic_program";
+import { Camera } from "./camera";
 
 // The type of shaders available for rendering with
 export const enum RenderStyle {
@@ -25,19 +26,12 @@ export const enum RenderStyle {
 
 export class Renderer {
 
+    //--------------------------------------------------------------------------
     // Public members
-    //---------------
+    //--------------------------------------------------------------------------
+
     // Is true if the renderer successfully initialized actors and programs
     public readonly isReady: boolean;
-
-    // Private members
-    //----------------
-    private readonly gl: WebGLRenderingContext;
-    private readonly programs: Program[];
-
-    // The currently active shader program
-    private activeProgramIndex = -1;
-    private activeAttrs = 0;
 
     public constructor(gl: WebGLRenderingContext) {
         this.gl = gl;
@@ -51,36 +45,55 @@ export class Renderer {
     }
 
     // Draw the given actors onto the viewport
-    public drawScene(actors: Actor[]) {
+    public drawScene(actors: Actor[], camera: Camera) {
+        // Set the camera view-projection matrix
+        if (this.activeProgram !== null) {
+            this.gl.uniformMatrix4fv(this.activeProgram.uniformViewProject, false, camera.viewTransform);
+        }
+
         for (let actor of actors) {
             // Change the active shader program to the shader the actor needs
-            if (this.activeProgramIndex !== actor.renderStyle) {
+            if (this.activeProgramId !== actor.renderStyle) {
                 this.activateProgramAtIndex(actor.renderStyle);
+
+                // Set the camera view-projection matrix
+                this.gl.uniformMatrix4fv(this.activeProgram.uniformViewProject, false, camera.viewTransform);
             }
 
             // Set uniforms for this actor
-            let program = this.programs[this.activeProgramIndex];
-            this.gl.uniformMatrix4fv(program.uniformModel, false, actor.modelTransform);
+            this.gl.uniformMatrix4fv(this.activeProgram.uniformModel, false, actor.modelTransform);
 
             actor.draw(this.gl);
         }
     }
 
+    //--------------------------------------------------------------------------
+    // Protected/Private members
+    //--------------------------------------------------------------------------
+
+    private readonly gl: WebGLRenderingContext;
+    private readonly programs: Program[];
+
+    // The currently active shader program
+    private activeProgram: Program = null;
+    private activeProgramId = -1;
+    private activeAttrs = 0;
+
     private activateProgramAtIndex(index: number) {
-        this.activeProgramIndex = index;
+        this.activeProgramId = index;
 
         // Use the shader program associated at the index
-        let program = this.programs[this.activeProgramIndex];
-        this.gl.useProgram(program.glsl);
+        this.activeProgram = this.programs[this.activeProgramId];
+        this.gl.useProgram(this.activeProgram.glsl);
 
         // Enable or disable vertex attributes until we match the program
-        if (program.attrCount !== this.activeAttrs) {
-            if (program.attrCount > this.activeAttrs) {
-                for (; this.activeAttrs < program.attrCount; this.activeAttrs++) {
+        if (this.activeProgram.attrCount !== this.activeAttrs) {
+            if (this.activeProgram.attrCount > this.activeAttrs) {
+                for (; this.activeAttrs < this.activeProgram.attrCount; this.activeAttrs++) {
                     this.gl.enableVertexAttribArray(this.activeAttrs);
                 }
             } else {
-                for (; this.activeAttrs > program.attrCount; this.activeAttrs--) {
+                for (; this.activeAttrs > this.activeProgram.attrCount; this.activeAttrs--) {
                     this.gl.disableVertexAttribArray(this.activeAttrs - 1);
                 }
             }
