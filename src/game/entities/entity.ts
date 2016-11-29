@@ -14,19 +14,27 @@
 // limitations under the License.
 //
 
-import { Actor } from "./actor";
-import { RenderStyle } from "../render/renderer";
+import { vec3 } from "../../lib/gl-matrix";
+import { Actor } from "../../actors/actor";
 
-export class ArenaActor extends Actor {
+export abstract class Entity {
 
-    public readonly renderStyle = RenderStyle.Basic;
+    // The visual for the entity
+    protected actor: Actor;
 
-    public constructor(gl: WebGLRenderingContext) {
-        super(gl, null);
+    // The current position in world space
+    public readonly position = vec3.create();
+
+    // The distance travelled per game tick
+    public speed = 0;
+
+    protected constructor() {
     }
 
-    public draw(gl: WebGLRenderingContext) {
-        
+    // Moves at the current speed for the given direction vector.
+    // dir is assumed to be normalized.
+    public move(dir: vec3) {
+        vec3.scaleAndAdd(this.position, this.position, dir, this.speed);
     }
 
 }

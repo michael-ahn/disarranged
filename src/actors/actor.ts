@@ -14,19 +14,21 @@
 // limitations under the License.
 //
 
+import { mat4 } from "../lib/gl-matrix";
+import { RenderStyle } from "../render/renderer";
+
 export abstract class Actor {
 
-    // Available render styles for the actors to be drawn in
-    public static readonly renderStyles = {
-        basic: 0,
-    };
-
     // The render style the actor is drawn in
-    public abstract readonly renderStyle: number;
+    public abstract readonly renderStyle: RenderStyle;
+
+    // The world-to-model transform for the vertex data
+    public readonly modelTransform = mat4.create();
 
     // Draws the actor for the given WebGL context
     public abstract draw(gl: WebGLRenderingContext): void;
 
+    // The vertex buffer object for the actor
     protected readonly vbo: WebGLBuffer;
 
     protected constructor(gl: WebGLRenderingContext, vboData: Float32Array) {

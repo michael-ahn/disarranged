@@ -14,19 +14,25 @@
 // limitations under the License.
 //
 
-import { Actor } from "./actor";
-import { RenderStyle } from "../render/renderer";
+import { Entity } from "./entity";
+import { vec3 } from "../../lib/gl-matrix";
 
-export class ArenaActor extends Actor {
+export class Player extends Entity {
 
-    public readonly renderStyle = RenderStyle.Basic;
+    // The current walking direction of the player, based on input
+    private readonly inputDirection = vec3.create();
 
-    public constructor(gl: WebGLRenderingContext) {
-        super(gl, null);
+    public constructor() {
+        super();
+        this.speed = 0.001;
     }
 
-    public draw(gl: WebGLRenderingContext) {
-        
+    public moveWithInputs(verticalInput: number, horizontalInput: number) {
+        let normalize = verticalInput !== 0 && horizontalInput !== 0 ? 0.7071 : 1;
+        this.inputDirection[0] = horizontalInput * normalize;
+        this.inputDirection[1] = verticalInput * normalize;
+        this.move(this.inputDirection)
     }
+
 
 }

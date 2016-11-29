@@ -14,21 +14,22 @@
 // limitations under the License.
 //
 
-import { Actor } from './actor';
+import { Actor } from "./actor";
+import { RenderStyle } from "../render/renderer";
 
 export class BasicActor extends Actor {
 
-    public readonly renderStyle = Actor.renderStyles.basic;
+    public readonly renderStyle = RenderStyle.Basic;
 
     private static data = new Float32Array([
-        0, 0,
-        0, 0.5,
-        0.7, 0,
+        0, 0, 0,
+        0, 0.5, 0,
+        0.7, 0, 0,
     ]);
 
     public constructor(gl: WebGLRenderingContext) {
         super(gl, BasicActor.data);
-        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
     }
 
     public draw(gl: WebGLRenderingContext) {

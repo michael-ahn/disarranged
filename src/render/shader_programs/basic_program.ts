@@ -14,15 +14,17 @@
 // limitations under the License.
 //
 
-import { Program } from './program';
+import { Program } from "./program";
 
 export class BasicProgram extends Program {
 
     private static vertexSource = `
+        uniform mat4 u_model;
+
         attribute vec4 a_pos;
 
         void main() {
-            gl_Position = a_pos;
+            gl_Position = u_model * a_pos;
         }
     `;
 
@@ -37,7 +39,12 @@ export class BasicProgram extends Program {
     public attrCount = 1;
 
     constructor(gl: WebGLRenderingContext) {
-        super(gl, BasicProgram.vertexSource, BasicProgram.fragmentSource, ['a_pos']);
+        super(gl, BasicProgram.vertexSource, BasicProgram.fragmentSource, ["a_pos"]);
+        
+        // Get uniform locations
+        if (this.isValid) {
+            this.uniformModel = gl.getUniformLocation(this.glsl, "u_model");
+        }
     }
-    
+
 }

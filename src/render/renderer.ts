@@ -15,23 +15,24 @@
 //
 
 import { Actor } from "../actors/actor";
-import { BasicActor } from "../actors/basic_actor";
 import { Program } from "./shader_programs/program";
 import { BasicProgram } from "./shader_programs/basic_program";
+
+// The type of shaders available for rendering with
+export const enum RenderStyle {
+    Basic = 0,
+}
 
 export class Renderer {
 
     // Public members
     //---------------
-
     // Is true if the renderer successfully initialized actors and programs
     public readonly isReady: boolean;
 
     // Private members
     //----------------
-
     private readonly gl: WebGLRenderingContext;
-    private readonly actors: Actor[];
     private readonly programs: Program[];
 
     // The currently active shader program
@@ -40,25 +41,26 @@ export class Renderer {
 
     public constructor(gl: WebGLRenderingContext) {
         this.gl = gl;
-        // Create and initialize actors
-        this.actors = [
-            new BasicActor(gl)
-        ];
 
         // Create and initialize shader programs
         this.programs = [];
-        this.programs[Actor.renderStyles.basic] = new BasicProgram(gl);
+        this.programs[RenderStyle.Basic] = new BasicProgram(gl);
 
         // Check that every program compiled correctly
         this.isReady = this.programs.every(p => p.isValid);
     }
 
-    public drawScene() {
-        for (let actor of this.actors) {
+    // Draw the given actors onto the viewport
+    public drawScene(actors: Actor[]) {
+        for (let actor of actors) {
             // Change the active shader program to the shader the actor needs
             if (this.activeProgramIndex !== actor.renderStyle) {
                 this.activateProgramAtIndex(actor.renderStyle);
             }
+
+            // Set uniforms for this actor
+            let program = this.programs[this.activeProgramIndex];
+            this.gl.uniformMatrix4fv(program.uniformModel, false, actor.modelTransform);
 
             actor.draw(this.gl);
         }

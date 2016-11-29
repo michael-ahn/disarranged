@@ -14,6 +14,8 @@
 // limitations under the License.
 //
 
+import { mat4 } from "../../lib/gl-matrix";
+
 export abstract class Program {
 
     // The compiled shader objects
@@ -28,6 +30,9 @@ export abstract class Program {
 
     // Whether the glsl program is valid after construction
     public readonly isValid: boolean;
+
+    // Uniform location of model matrix
+    public uniformModel: WebGLUniformLocation;
 
     // Compiles the given shader source code into the specified shader type
     private static createShader(gl: WebGLRenderingContext, shaderType: number, source: string): WebGLShader {
@@ -68,7 +73,8 @@ export abstract class Program {
         return null;
     }
 
-    constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string, attribs: string[]) {
+    protected constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string,
+                          attribs: string[]) {
         this.vertexShader = Program.createShader(gl, gl.VERTEX_SHADER, vertexSource);
         this.fragmentShader = Program.createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
 
