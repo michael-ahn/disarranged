@@ -25,7 +25,7 @@ export class Player extends Entity {
 
     public constructor(actor: BasicActor) {
         super(actor);
-        this.speed = 0.005;
+        this.speed = 0.5;
     }
 
     public moveWithInputs(verticalInput: number, horizontalInput: number) {

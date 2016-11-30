@@ -19,6 +19,7 @@ import { Entity } from "./entities/entity";
 import { Player } from "./entities/player";
 
 import { Actor } from "../actors/actor";
+import { ArenaActor } from "../actors/arena_actor";
 import { BasicActor } from "../actors/basic_actor";
 
 export class Game {
@@ -46,7 +47,8 @@ export class Game {
     // Reset the state of the game
     private init() {
         this.actors = [
-            new BasicActor(this.gl)
+            new BasicActor(this.gl),
+            new ArenaActor(this.gl),
         ];
 
         this.player = new Player(this.actors[0]);

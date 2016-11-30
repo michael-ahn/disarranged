@@ -19,21 +19,34 @@ import { RenderStyle } from "../render/renderer";
 
 export class BasicActor extends Actor {
 
+    //--------------------------------------------------------------------------
+    // Public members
+    //--------------------------------------------------------------------------
+
     public readonly renderStyle = RenderStyle.Basic;
 
-    private static data = new Float32Array([
-        0, 0, 0,
-        0, 0.5, 0,
-        0.7, 0, 0,
-    ]);
-
     public constructor(gl: WebGLRenderingContext) {
-        super(gl, BasicActor.data);
-        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        super(gl, BasicActor.vertexData, BasicActor.elementData);
     }
 
     public draw(gl: WebGLRenderingContext) {
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        super.draw(gl);
     }
+
+    //--------------------------------------------------------------------------
+    // Private members
+    //--------------------------------------------------------------------------
+
+    private static vertexData = new Float32Array([
+        0, 0, 0,
+        0, 10, 0,
+        -15, 0, 0,
+    ]);
+
+    private static elementData = new Uint16Array([
+        0, 1, 2,
+    ]);
 
 }

@@ -88,7 +88,7 @@ function gameTick() {
 
     game.tick(keyboard);
 
-    camera.eyePosition.set([0, 0, 3]);
+    camera.eyePosition.set([0, 25, 40]);
     camera.lookPosition.set([0, 0, 0]);
     camera.update();
 

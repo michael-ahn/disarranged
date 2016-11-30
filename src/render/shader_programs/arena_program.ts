@@ -16,29 +16,39 @@
 
 import { Program } from "./program";
 
-export class BasicProgram extends Program {
+export class ArenaProgram extends Program {
 
     private static vertexSource = `
         uniform mat4 u_viewProject;
         uniform mat4 u_model;
 
         attribute vec4 a_pos;
+        attribute vec3 a_norm;
+
+        varying vec3 v_norm;
 
         void main() {
             gl_Position = u_viewProject * u_model * a_pos;
+            v_norm = a_norm;
         }
     `;
 
     private static fragmentSource = `
         precision mediump float;
 
+        varying vec3 v_norm;
+
         void main() {
-            gl_FragColor = vec4(1, 0, 0.5, 1);
+            vec3 lightdir = normalize(vec3(1, 1, 1));
+            float light = dot(normalize(v_norm), lightdir);
+
+            gl_FragColor = vec4(0, 1, 0.5, 1);
+            gl_FragColor.rgb *= light;
         }
     `;
 
     constructor(gl: WebGLRenderingContext) {
-        super(gl, BasicProgram.vertexSource, BasicProgram.fragmentSource, ["a_pos"]);
+        super(gl, ArenaProgram.vertexSource, ArenaProgram.fragmentSource, ["a_pos", "a_norm"]);
         
         // Get uniform locations
         if (this.isValid) {

@@ -19,6 +19,10 @@ import { RenderStyle } from "../render/renderer";
 
 export abstract class Actor {
 
+    //--------------------------------------------------------------------------
+    // Public members
+    //--------------------------------------------------------------------------
+
     // The render style the actor is drawn in
     public abstract readonly renderStyle: RenderStyle;
 
@@ -26,12 +30,32 @@ export abstract class Actor {
     public readonly modelTransform = mat4.create();
 
     // Draws the actor for the given WebGL context
-    public abstract draw(gl: WebGLRenderingContext): void;
+    public draw(gl: WebGLRenderingContext) {
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ebo);
+        gl.drawElements(gl.TRIANGLES, this.elementCount, gl.UNSIGNED_SHORT, 0);
+    }
+
+    //--------------------------------------------------------------------------
+    // Protected members
+    //--------------------------------------------------------------------------
 
     // The vertex buffer object for the actor
     protected readonly vbo: WebGLBuffer;
 
-    protected constructor(gl: WebGLRenderingContext, vboData: Float32Array) {
+    // The element array for the actor
+    protected readonly ebo: WebGLBuffer;
+
+    // The number of elements
+    protected readonly elementCount: number;
+
+    protected constructor(gl: WebGLRenderingContext, vboData: Float32Array, eboData: Uint16Array) {
+        // Create the element buffer
+        this.ebo = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ebo);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, eboData, gl.STATIC_DRAW);
+        this.elementCount = eboData.length;
+
+        // Create the vertex buffer
         this.vbo = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
         gl.bufferData(gl.ARRAY_BUFFER, vboData, gl.STATIC_DRAW);

@@ -17,11 +17,13 @@
 import { Actor } from "../actors/actor";
 import { Program } from "./shader_programs/program";
 import { BasicProgram } from "./shader_programs/basic_program";
+import { ArenaProgram } from "./shader_programs/arena_program";
 import { Camera } from "./camera";
 
 // The type of shaders available for rendering with
 export const enum RenderStyle {
     Basic = 0,
+    Arena = 1,
 }
 
 export class Renderer {
@@ -39,9 +41,16 @@ export class Renderer {
         // Create and initialize shader programs
         this.programs = [];
         this.programs[RenderStyle.Basic] = new BasicProgram(gl);
+        this.programs[RenderStyle.Arena] = new ArenaProgram(gl);
 
         // Check that every program compiled correctly
         this.isReady = this.programs.every(p => p.isValid);
+
+        // Set default rendering state
+        if (this.isReady) {
+            gl.enable(gl.DEPTH_TEST);
+            gl.enable(gl.CULL_FACE);
+        }
     }
 
     // Draw the given actors onto the viewport

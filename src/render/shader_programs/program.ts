@@ -26,7 +26,7 @@ export abstract class Program {
     public readonly glsl: WebGLProgram;
 
     // The number of vertex array attributes for the shader
-    public abstract attrCount: number;
+    public readonly attrCount: number;
 
     // Whether the glsl program is valid after construction
     public readonly isValid: boolean;
@@ -82,6 +82,7 @@ export abstract class Program {
         this.isValid = !!(this.vertexShader && this.fragmentShader);
         if (this.isValid) {
             this.glsl = Program.createProgram(gl, this.vertexShader, this.fragmentShader, attribs);
+            this.attrCount = attribs.length;
             this.isValid = !!this.glsl;
         }
     }

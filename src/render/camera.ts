@@ -50,7 +50,7 @@ export class Camera {
         mat4.perspective(this.perspectiveTransform,
             3.14159 / 3, // Field of view: 60deg
             this.gl.canvas.clientWidth / this.gl.canvas.clientHeight,
-            0.5, 100.0); // Near and far planes
+            1, 200.0); // Near and far planes
     }
 
     //--------------------------------------------------------------------------
