@@ -21,39 +21,35 @@ import { Player } from "./entities/player";
 import { Actor } from "../actors/actor";
 import { ArenaActor } from "../actors/arena_actor";
 import { BasicActor } from "../actors/basic_actor";
+import { BallActor } from "../actors/ball_actor";
 
 export class Game {
 
-    private entities: Entity[];
-    private player: Player;
+    public readonly player: Player;
 
-    public actors: Actor[];
+    public readonly actors: Actor[];
 
     private readonly gl: WebGLRenderingContext;
 
-    public constructor(gl: WebGLRenderingContext) {
+    public constructor(gl: WebGLRenderingContext, input: Keyboard) {
         this.gl = gl;
-        this.init();
-    }
 
-    // Progresses the game state by one tick
-    public tick(input: Keyboard) {
-        let verticalInput = input.isKeyDown(KeyCode.UP) ? 1 : (input.isKeyDown(KeyCode.DOWN) ? -1 : 0);
-        let horizontalInput = input.isKeyDown(KeyCode.LEFT) ? -1 : (input.isKeyDown(KeyCode.RIGHT) ? 1 : 0);
-        this.player.moveWithInputs(verticalInput, horizontalInput);
-
-    }
-
-    // Reset the state of the game
-    private init() {
         this.actors = [
-            new BasicActor(this.gl),
+            new BallActor(this.gl),
             new ArenaActor(this.gl),
         ];
 
         this.player = new Player(this.actors[0]);
 
-        this.entities = [this.player];
+        // Hook up player actions
+        input.registerEvent(KeyCode.SPACE, () => this.player.jump());
     }
 
+    // Progresses the game state by one tick
+    public tick(input: Keyboard) {
+        let verticalInput = input.isKeyDown(KeyCode.UP) ? 1 : (input.isKeyDown(KeyCode.DOWN) ? -1 : 0);
+        let horizontalInput = input.isKeyDown(KeyCode.LEFT) ? 1 : (input.isKeyDown(KeyCode.RIGHT) ? -1 : 0);
+        this.player.moveWithInputs(verticalInput, horizontalInput);
+
+    }
 }

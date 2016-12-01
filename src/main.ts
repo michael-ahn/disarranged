@@ -46,7 +46,7 @@ function init() {
     keyboard = new Keyboard();
 
     // Create game
-    game = new Game(gl);
+    game = new Game(gl, keyboard);
 
     // Create a camera
     camera = new Camera(gl);
@@ -88,9 +88,7 @@ function gameTick() {
 
     game.tick(keyboard);
 
-    camera.eyePosition.set([0, 25, 40]);
-    camera.lookPosition.set([0, 0, 0]);
-    camera.update();
+    camera.follow(game.player);
 
     renderer.drawScene(game.actors, camera);
 }

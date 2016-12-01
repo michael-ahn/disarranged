@@ -36,7 +36,6 @@ export abstract class Entity {
     // dir is assumed to be normalized.
     public move(dir: vec3) {
         vec3.scaleAndAdd(this.position, this.position, dir, this.speed);
-
         mat4.fromTranslation(this.actor.modelTransform, this.position);
     }
 

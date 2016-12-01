@@ -15,6 +15,7 @@
 //
 
 import { mat4, vec3 } from "../lib/gl-matrix";
+import { Entity } from "../game/entities/entity";
 
 export class Camera {
 
@@ -37,6 +38,14 @@ export class Camera {
         this.buildProjection();
     }
 
+    public follow(target: Entity) {
+        this.eyePosition.set(target.position);
+        this.lookPosition.set(target.position);
+        this.eyePosition[1] += 5;
+        this.eyePosition[2] -= 10;
+        this.update();
+    }
+
     // Rebuilds the view transformation matrix using the current eye positon
     // and look position.
     public update() {
@@ -54,7 +63,7 @@ export class Camera {
     }
 
     //--------------------------------------------------------------------------
-    // Protected/Private members
+    // Private members
     //--------------------------------------------------------------------------
 
     private readonly gl: WebGLRenderingContext;
