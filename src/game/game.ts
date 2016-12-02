@@ -17,6 +17,7 @@
 import { Keyboard, KeyCode } from "../util/keyboard";
 import { Entity } from "./entities/entity";
 import { Player } from "./entities/player";
+import { Enemy } from "./entities/enemy";
 
 import { Actor } from "../actors/actor";
 import { ArenaActor } from "../actors/arena_actor";
@@ -35,14 +36,21 @@ export class Game {
     // The player's data object
     public readonly player: Player;
 
+    // The enemy's data object
+    public readonly enemy: Enemy;
+
     public constructor(gl: WebGLRenderingContext, input: Keyboard) {
         this.gl = gl;
 
-        let arenaActor = new ArenaActor(this.gl), playerActor = new BallActor(this.gl);
+        let arenaActor = new ArenaActor(this.gl);
+        let playerActor = new BallActor(this.gl);
+        let enemyActor = new BallActor(this.gl);
         
         this.player = new Player(playerActor, arenaActor);
+        this.player.position[2] = -10;
+        this.enemy = new Enemy(enemyActor, arenaActor);
 
-        this.actors = [ arenaActor, playerActor ];
+        this.actors = [ arenaActor, playerActor, enemyActor ];
 
         // Hook up player actions
         input.registerEvent(KeyCode.SPACE, () => this.player.jump());
@@ -50,6 +58,10 @@ export class Game {
 
     // Progresses the game state by one tick
     public tick(input: Keyboard) {
+        // Update the player's orientation
+        this.player.orientMovement(this.enemy);
+
+        // Move the player based on the current directional input
         let verticalInput = input.isKeyDown(KeyCode.UP) ? 1 : (input.isKeyDown(KeyCode.DOWN) ? -1 : 0);
         let horizontalInput = input.isKeyDown(KeyCode.LEFT) ? 1 : (input.isKeyDown(KeyCode.RIGHT) ? -1 : 0);
         this.player.setDirection(verticalInput, horizontalInput);

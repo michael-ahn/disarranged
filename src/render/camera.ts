@@ -16,6 +16,7 @@
 
 import { mat4, vec3 } from "../lib/gl-matrix";
 import { Entity } from "../game/entities/entity";
+import { Player } from "../game/entities/player";
 
 export class Camera {
 
@@ -38,11 +39,13 @@ export class Camera {
         this.buildProjection();
     }
 
-    public follow(target: Entity) {
-        this.eyePosition.set(target.position);
+    // Looks at the target from the position of the player in 3rd person
+    public follow(player: Player, target: Entity) {
+        // Look at the target
         this.lookPosition.set(target.position);
-        this.eyePosition[1] += 5;
-        this.eyePosition[2] -= 10;
+        // View from player but behind by some distance
+        vec3.scaleAndAdd(this.eyePosition, player.position, player.forwardBasis, -10);
+        this.eyePosition[1] += 5; // Raise camera
         this.update();
     }
 
@@ -74,6 +77,7 @@ export class Camera {
     // The orientation of the camera
     private readonly upDirection = vec3.create();
 
-    // Matrix to store intermediate values
+    // Data to store intermediate values
     private readonly scratchMatrix = mat4.create();
+    private readonly scratchVector = vec3.create();
 }

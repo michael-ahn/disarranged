@@ -88,7 +88,7 @@ function gameTick() {
 
     game.tick(keyboard);
 
-    camera.follow(game.player);
+    camera.follow(game.player, game.enemy);
 
     renderer.drawScene(game.actors, camera);
 }

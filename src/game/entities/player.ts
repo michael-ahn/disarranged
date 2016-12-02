@@ -25,6 +25,10 @@ export class Player extends Entity {
     // Public members
     //--------------------------------------------------------------------------
 
+    // The coordinate system basis vectors for the player's movement
+    public readonly forwardBasis = vec3.create();
+    public readonly sideBasis = vec3.create();
+
     public constructor(actor: Actor, ground: ArenaActor) {
         super(actor);
         this.speed = 0.5;
@@ -46,6 +50,18 @@ export class Player extends Entity {
         this.direction[1] = 1.0;
     }
 
+    // Orients the directional movement at the target entity
+    public orientMovement(target: Entity) {
+        // Get the unit vector pointing at the enemy
+        vec3.subtract(this.forwardBasis, target.position, this.position);
+        // Zero the y dimension and normalize
+        this.forwardBasis[1] = 0;
+        vec3.normalize(this.forwardBasis, this.forwardBasis);
+        // Let the side basis be the rotated vector
+        this.sideBasis[0] = this.forwardBasis[2];
+        this.sideBasis[2] = -this.forwardBasis[0];
+    }
+
     // Move the player one step
     public move() {
         // Dampen lateral movement in the air
@@ -54,8 +70,18 @@ export class Player extends Entity {
             this.direction[2] *= 0.5;
         }
 
-        // Update the position vector
-        vec3.scaleAndAdd(this.position, this.position, this.direction, this.speed);
+        // Add contribution in the forward direction
+        if (this.direction[2] !== 0) {
+            vec3.scaleAndAdd(this.position, this.position, this.forwardBasis, this.direction[2] * this.speed);
+        }
+        // Add contribution in the side direction
+        if (this.direction[0] !== 0) {
+            vec3.scaleAndAdd(this.position, this.position, this.sideBasis, this.direction[0] * this.speed);
+        }
+        // Add contribution from jumping
+        if (this.direction[1] !== 0) {
+            this.position[1] += this.direction[1] * this.speed;
+        }
 
         // Sample the ground height at our current location
         let floor = this.ground.sampleHeight(this.position[0], this.position[2]);
@@ -92,6 +118,8 @@ export class Player extends Entity {
 
     // The current moving direction of the player, based on input
     private readonly direction = vec3.create();
+
+    
 
     // Whether the player is currently in the air
     private isAirborne = false;
