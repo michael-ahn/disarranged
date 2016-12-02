@@ -15,8 +15,9 @@
 //
 
 import { Entity } from "./entity";
-import { vec3 } from "../../lib/gl-matrix";
-import { BasicActor } from "../../actors/basic_actor";
+import { vec3, mat4 } from "../../lib/gl-matrix";
+import { Actor } from "../../actors/actor";
+import { ArenaActor } from "../../actors/arena_actor";
 
 export class Player extends Entity {
 
@@ -24,17 +25,17 @@ export class Player extends Entity {
     // Public members
     //--------------------------------------------------------------------------
 
-    public constructor(actor: BasicActor) {
+    public constructor(actor: Actor, ground: ArenaActor) {
         super(actor);
         this.speed = 0.5;
+        this.ground = ground;
     }
 
-    // Moves the player one step with the given directional influences
-    public moveWithInputs(verticalInput: number, horizontalInput: number) {
+    // Set's the player's direction with the given direction influences
+    public setDirection(verticalInput: number, horizontalInput: number) {
         let normalize = verticalInput !== 0 && horizontalInput !== 0 ? 0.7071 : 1;
-        this.inputDirection[0] = horizontalInput * normalize;
-        this.inputDirection[2] = verticalInput * normalize;
-        this.move(this.inputDirection)
+        this.direction[0] = horizontalInput * normalize;
+        this.direction[2] = verticalInput * normalize;
     }
 
     // Performs a jump, if possible
@@ -42,39 +43,55 @@ export class Player extends Entity {
         if (this.isAirborne)
             return;
         this.isAirborne = true;
-        this.inputDirection[1] = 1.0;
+        this.direction[1] = 1.0;
     }
 
     // Move the player one step
-    public move(dir: vec3) {
+    public move() {
+        // Dampen lateral movement in the air
+        if (this.isAirborne) {
+            this.direction[0] *= 0.5;
+            this.direction[2] *= 0.5;
+        }
+
+        // Update the position vector
+        vec3.scaleAndAdd(this.position, this.position, this.direction, this.speed);
+
+        // Sample the ground height at our current location
+        let floor = this.ground.sampleHeight(this.position[0], this.position[2]);
+
+        // Raise the standing height by our distance to the origin of the model
+        floor += 0.9;
+
         // Ground the player if they're jumping and hit the ground
         if (this.isAirborne) {
+            // Apply gravity to the player
+            this.direction[1] -= 0.03;
+
             // Ground the player if they hit the ground while falling
-            if (this.inputDirection[1] < 0 && this.position[1] <= 0) {
+            if (this.direction[1] < 0 && this.position[1] <= floor) {
                 this.isAirborne = false;
-                this.position[1] = 0;
-                this.inputDirection[1] = 0;
+                this.position[1] = floor;
+                this.direction[1] = 0;
             }
-            // Dampen lateral movement in the air
-            this.inputDirection[0] *= 0.5;
-            this.inputDirection[2] *= 0.5;
+        } else {
+            // Stick the player to the floor
+            this.position[1] = floor;
         }
-
-        // Move the player
-        super.move(dir);
-
-        // Apply gravity to the player
-        if (this.isAirborne) {
-            this.inputDirection[1] -= 0.03;
-        }
+    
+        // Move the actor to the final position
+        mat4.fromTranslation(this.actor.modelTransform, this.position);
     }
 
     //--------------------------------------------------------------------------
     // Private members
     //--------------------------------------------------------------------------
 
-    // The current walking direction of the player, based on input
-    private readonly inputDirection = vec3.create();
+    // The ground object to collide with
+    private readonly ground: ArenaActor;
+
+    // The current moving direction of the player, based on input
+    private readonly direction = vec3.create();
 
     // Whether the player is currently in the air
     private isAirborne = false;

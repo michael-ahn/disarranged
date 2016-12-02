@@ -32,11 +32,7 @@ export abstract class Entity {
         this.actor = actor;
     }
 
-    // Moves at the current speed for the given direction vector.
-    // dir is assumed to be normalized.
-    public move(dir: vec3) {
-        vec3.scaleAndAdd(this.position, this.position, dir, this.speed);
-        mat4.fromTranslation(this.actor.modelTransform, this.position);
-    }
+    // Moves the entity one step
+    public abstract move(): void;
 
 }

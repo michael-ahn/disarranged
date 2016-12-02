@@ -25,21 +25,24 @@ import { BallActor } from "../actors/ball_actor";
 
 export class Game {
 
-    public readonly player: Player;
+    //--------------------------------------------------------------------------
+    // Public members
+    //--------------------------------------------------------------------------
 
+    // All of the drawable actors for the game
     public readonly actors: Actor[];
 
-    private readonly gl: WebGLRenderingContext;
+    // The player's data object
+    public readonly player: Player;
 
     public constructor(gl: WebGLRenderingContext, input: Keyboard) {
         this.gl = gl;
 
-        this.actors = [
-            new BallActor(this.gl),
-            new ArenaActor(this.gl),
-        ];
+        let arenaActor = new ArenaActor(this.gl), playerActor = new BallActor(this.gl);
+        
+        this.player = new Player(playerActor, arenaActor);
 
-        this.player = new Player(this.actors[0]);
+        this.actors = [ arenaActor, playerActor ];
 
         // Hook up player actions
         input.registerEvent(KeyCode.SPACE, () => this.player.jump());
@@ -49,7 +52,17 @@ export class Game {
     public tick(input: Keyboard) {
         let verticalInput = input.isKeyDown(KeyCode.UP) ? 1 : (input.isKeyDown(KeyCode.DOWN) ? -1 : 0);
         let horizontalInput = input.isKeyDown(KeyCode.LEFT) ? 1 : (input.isKeyDown(KeyCode.RIGHT) ? -1 : 0);
-        this.player.moveWithInputs(verticalInput, horizontalInput);
+        this.player.setDirection(verticalInput, horizontalInput);
+        this.player.move();
 
     }
+
+    //--------------------------------------------------------------------------
+    // Private members
+    //--------------------------------------------------------------------------
+
+    private readonly gl: WebGLRenderingContext;
+
+    private readonly arena: ArenaActor;
+
 }
