@@ -53,16 +53,16 @@ export class ArenaProgram extends Program {
 
         "void main(void) {",
             // Calculate the light
-            "float lightFactor = dot(normalize(v_norm), u_lightPos);",
+            "float surfaceFactor = dot(normalize(v_norm), u_lightPos);",
             "vec3 colour = vec3(0, 1, 0.5);",
 
             // Calculate effect from shadow
             "vec3 depth = v_shadowPos.xyz / v_shadowPos.w;",
-            "depth.z *= 0.999;",
+            "depth.z -= 0.0005;",
             "float shadow = texture2D(u_shadowMap, depth.xy).r;",
-            "float shadowFactor = shadow < depth.z ? 0.0 : 1.0;",
+            "float shadowFactor = shadow < depth.z ? 0.4 : 1.0;",
 
-            "vec3 outColour = colour * ((lightFactor * shadowFactor) + 0.2);",
+            "vec3 outColour = colour * ((0.8 * surfaceFactor * shadowFactor) + 0.2);",
             "gl_FragColor = vec4(outColour, 1);",
         "}"
     ].join("\n");
