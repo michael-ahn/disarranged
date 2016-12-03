@@ -26,19 +26,13 @@ export class DeferredProgram extends Program {
 
         "uniform mat4 u_projectView;",
         "uniform mat4 u_model;",
-        "uniform mat4 u_lightProjectView;",
 
-        "varying vec4 v_pos;",
         "varying vec3 v_norm;",
 
-        "const mat4 c_depthBias = mat4(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);",
-
         "void main(void) {",
-            "vec4 position =  u_model * vec4(a_pos, 1.0);",
-            "vec4 shadowPos = c_depthBias *  u_lightProjectView * position;",
-            "v_pos = shadowPos;",
+            "vec4 world_pos = u_model * vec4(a_pos, 1.0);",
             "v_norm = a_norm;",
-            "gl_Position = u_projectView * position;",
+            "gl_Position = u_projectView * world_pos;",
         "}"
     ].join("\n");
 
@@ -48,7 +42,6 @@ export class DeferredProgram extends Program {
 
         "uniform vec3 u_lightPos;",
 
-        "varying vec4 v_pos;",
         "varying vec3 v_norm;",
 
         "void main(void) {",
@@ -56,13 +49,9 @@ export class DeferredProgram extends Program {
             "float surfaceFactor = dot(normalize(v_norm), u_lightPos);",
             "vec3 colour = vec3(0, 1, 0.5);",
 
-            "vec3 depth = v_pos.xyz;",
-            "depth.z -= 0.005;// * surfaceFactor;",
-
             "vec3 outColour = colour * ((0.8 * surfaceFactor) + 0.2);",
-            "gl_FragData[0] = vec4(depth, 1);",
-            "gl_FragData[1] = vec4(outColour, 1);",
-            "gl_FragData[2] = vec4(v_norm, 1);",
+            "gl_FragData[0] = vec4(outColour, 1);",
+            "gl_FragData[1] = vec4(v_norm, 1);",
         "}"
     ].join("\n");
 

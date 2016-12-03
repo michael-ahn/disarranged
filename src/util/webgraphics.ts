@@ -46,6 +46,7 @@ export class WebGraphics {
         if (gl.canvas.width != width || gl.canvas.height != height) {
             gl.canvas.width = width;
             gl.canvas.height = height;
+            gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
             return true;
         }
         return false;

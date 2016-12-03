@@ -53,15 +53,6 @@ export class RenderShadows {
             return;
         }
 
-        // Create a color texture
-        // this.colourTexture = gl.createTexture();
-        // gl.bindTexture(gl.TEXTURE_2D, this.colourTexture);
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-
         // Create the depth texture used as our shadow map
         this.depthTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);
@@ -69,11 +60,10 @@ export class RenderShadows {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, size, size, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, canvas.clientWidth, canvas.clientHeight, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
 
         this.framebuffer = gl.createFramebuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
-        // gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.colourTexture, 0);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthTexture, 0);
 
         // Get status and clean up
@@ -96,11 +86,6 @@ export class RenderShadows {
 
         // Render to the shadow's framebuffer
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
-
-        // Set the viewport to match the texture and disable colour rendering
-        gl.viewport(0, 0, this.mapSize, this.mapSize);
-        gl.colorMask(false, false, false, false);
-        // gl.cullFace(gl.FRONT);
         gl.clear(gl.DEPTH_BUFFER_BIT);
 
         // Use the shadow shader
@@ -116,9 +101,6 @@ export class RenderShadows {
 
         // Reset the state
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.colorMask(true, true, true, true);
-        // gl.cullFace(gl.BACK);
-        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
     }
 
     //--------------------------------------------------------------------------

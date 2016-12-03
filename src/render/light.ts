@@ -25,13 +25,7 @@ export class Light {
     // The position of the light
     public readonly position = vec3.create();
 
-    // The view transformation matrix for this light
-    public readonly viewTransform = mat4.create();
-
-    // The projection matrix for this light
-    public readonly projectTransform = mat4.create();
-
-    // The combined Project * View matrix
+    // The combined Projection * View matrix
     public readonly projectViewTransform = mat4.create();
 
     public constructor(x: number, y: number, z: number, size: number) {
@@ -45,5 +39,15 @@ export class Light {
 
         mat4.multiply(this.projectViewTransform, this.projectTransform, this.viewTransform);
     }
+
+    //--------------------------------------------------------------------------
+    // Private members
+    //--------------------------------------------------------------------------
+
+    // The view transformation matrix for this light
+    public readonly viewTransform = mat4.create();
+
+    // The projection matrix for this light
+    public readonly projectTransform = mat4.create();
 
 }

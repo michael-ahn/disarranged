@@ -10,6 +10,7 @@
     "dev": "gulp",
     "debug": "gulp main-debug",
     "build": "gulp build",
+    "build-debug": "gulp build-debug",
     "clean": "gulp clean"
   },
   "repository": {

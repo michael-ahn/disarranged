@@ -24,14 +24,19 @@ export class Camera {
     // Public members
     //--------------------------------------------------------------------------
 
+    // The Projection * View matrix of the camera
+    public readonly projectViewTransform = mat4.create();
+
+    // The inverse of the Projection * View matrix
+    public readonly invProjectTransform = mat4.create();
+
     // The world to projected view transformation.
     public readonly viewTransform = mat4.create();
 
+    public readonly invViewTransform = mat4.create();
+
     // The projection matrix
     public readonly projectTransform = mat4.create();
-
-    // Data to store intermediate values
-    public readonly projectViewTransform = mat4.create();
 
     // The position of the camera in world space.
     public readonly eyePosition = vec3.create();
@@ -60,6 +65,7 @@ export class Camera {
     public update() {
         mat4.lookAt(this.viewTransform, this.eyePosition, this.lookPosition, this.upDirection);
         mat4.multiply(this.projectViewTransform, this.projectTransform, this.viewTransform);
+        mat4.invert(this.invViewTransform, this.viewTransform);
     }
 
     // Reconstructs the projection matrix for the camera.
@@ -69,6 +75,7 @@ export class Camera {
             3.14159 / 3, // Field of view: 60deg
             this.gl.canvas.clientWidth / this.gl.canvas.clientHeight,
             1, 200.0); // Near and far planes
+        mat4.invert(this.invProjectTransform, this.projectTransform);
     }
 
     //--------------------------------------------------------------------------

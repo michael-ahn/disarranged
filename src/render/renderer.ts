@@ -27,6 +27,7 @@ import { DebugProgram } from "./shader_programs/debug_program";
 import { DeferredProgram } from "./shader_programs/deferred_program";
 import { CompositorProgram } from "./shader_programs/compositor_program";
 import { WebGraphics } from "../util/webgraphics";
+import { mat4, vec3 } from "../lib/gl-matrix";
 
 // The type of shaders available for rendering with
 export const enum RenderStyle {
@@ -92,7 +93,6 @@ export class Renderer {
             gl.enable(gl.DEPTH_TEST);
             gl.enable(gl.CULL_FACE);
             gl.cullFace(gl.BACK);
-            gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         }
     }
 
@@ -164,16 +164,20 @@ export class Renderer {
         program = this.compositorProgram;
         gl.useProgram(program.glsl);
 
+        gl.uniformMatrix4fv(program.uniform["u_invProj"], false, camera.invProjectTransform);
+        gl.uniformMatrix4fv(program.uniform["u_invView"], false, camera.invViewTransform);
+        gl.uniformMatrix4fv(program.uniform["u_lightPV"], false, this.light.projectViewTransform);
+
         // Set target textures
         gl.activeTexture(gl.TEXTURE0);
-        gl.uniform1i(program.uniform["u_positionTexture"], 0);
-        gl.bindTexture(gl.TEXTURE_2D, this.deferredPosition);
-        gl.activeTexture(gl.TEXTURE1);
-        gl.uniform1i(program.uniform["u_colourTexture"], 1);
+        gl.uniform1i(program.uniform["u_colourTexture"], 0);
         gl.bindTexture(gl.TEXTURE_2D, this.deferredColour);
-        gl.activeTexture(gl.TEXTURE2);
-        gl.uniform1i(program.uniform["u_normalTexture"], 2);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.uniform1i(program.uniform["u_normalTexture"], 1);
         gl.bindTexture(gl.TEXTURE_2D, this.deferredNormal);
+        gl.activeTexture(gl.TEXTURE2);
+        gl.uniform1i(program.uniform["u_depthTexture"], 2);
+        gl.bindTexture(gl.TEXTURE_2D, this.deferredDepth);
         // Set the shadow map texture
         gl.activeTexture(gl.TEXTURE3);
         gl.uniform1i(program.uniform["u_shadowMap"], 3);
@@ -195,11 +199,10 @@ export class Renderer {
     private readonly gl: WebGLRenderingContext;
     private readonly meshShader: Program;
     private readonly programs: Program[];
+
     private readonly shadows: RenderShadows;
 
     private readonly light: Light;
-
-    private activeProgram: Program;
 
     // Debugging
     private readonly debugQuad: DebugActor;
@@ -245,7 +248,6 @@ export class Renderer {
 
         // Create textures
         let width = canvas.clientWidth, height = canvas.clientHeight;
-        this.deferredPosition = WebGraphics.createTexture(gl, width, height, gl.RGBA, gl.FLOAT);
         this.deferredColour = WebGraphics.createTexture(gl, width, height, gl.RGBA, gl.FLOAT);
         this.deferredNormal = WebGraphics.createTexture(gl, width, height, gl.RGBA, gl.FLOAT);
         this.deferredDepth = WebGraphics.createTexture(gl, width, height, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT);
@@ -253,9 +255,8 @@ export class Renderer {
         // Create attachments
         this.deferredFramebuffer = gl.createFramebuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.deferredFramebuffer);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, this.extDB.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D, this.deferredPosition, 0);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, this.extDB.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D, this.deferredColour, 0);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, this.extDB.COLOR_ATTACHMENT2_WEBGL, gl.TEXTURE_2D, this.deferredNormal, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, this.extDB.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D, this.deferredColour, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, this.extDB.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D, this.deferredNormal, 0);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.deferredDepth, 0);
 
         let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
@@ -268,7 +269,6 @@ export class Renderer {
         this.extDB.drawBuffersWEBGL([
             this.extDB.COLOR_ATTACHMENT0_WEBGL,
             this.extDB.COLOR_ATTACHMENT1_WEBGL,
-            this.extDB.COLOR_ATTACHMENT2_WEBGL,
         ]);
 
         // Reset state
