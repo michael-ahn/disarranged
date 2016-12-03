@@ -20,6 +20,7 @@ import { BasicProgram } from "./shader_programs/basic_program";
 import { ArenaProgram } from "./shader_programs/arena_program";
 import { Camera } from "./camera";
 import { Light } from "./light";
+import { GBuffer } from "./gbuffer";
 import { RenderShadows } from "./render_shadows";
 import { QuadActor } from "../actors/quad_actor";
 import { DebugActor } from "../actors/debug_actor";
@@ -80,7 +81,8 @@ export class Renderer {
         this.isReady = this.isReady && this.shadows.isReady;
 
         // Initialize deferred shading
-        this.isReady = this.isReady && this.initializeDeferredShading();
+        this.deferredGBuffer = new GBuffer(gl, this.extDB);
+        this.isReady = this.isReady && this.deferredGBuffer.isValid;
 
         // Initialize debugging
         this.debugQuad = new DebugActor(gl);
@@ -108,7 +110,7 @@ export class Renderer {
 
         // Set the active program
         gl.useProgram(program.glsl);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.deferredFramebuffer);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.deferredGBuffer.framebuffer);
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -138,13 +140,13 @@ export class Renderer {
         // Set target textures
         gl.activeTexture(gl.TEXTURE0);
         gl.uniform1i(program.uniform["u_colourTexture"], 0);
-        gl.bindTexture(gl.TEXTURE_2D, this.deferredColour);
+        gl.bindTexture(gl.TEXTURE_2D, this.deferredGBuffer.colourTexture);
         gl.activeTexture(gl.TEXTURE1);
         gl.uniform1i(program.uniform["u_normalTexture"], 1);
-        gl.bindTexture(gl.TEXTURE_2D, this.deferredNormal);
+        gl.bindTexture(gl.TEXTURE_2D, this.deferredGBuffer.normalTexture);
         gl.activeTexture(gl.TEXTURE2);
         gl.uniform1i(program.uniform["u_depthTexture"], 2);
-        gl.bindTexture(gl.TEXTURE_2D, this.deferredDepth);
+        gl.bindTexture(gl.TEXTURE_2D, this.deferredGBuffer.depthTexture);
         // Set the shadow map texture
         gl.activeTexture(gl.TEXTURE3);
         gl.uniform1i(program.uniform["u_shadowMap"], 3);
@@ -178,11 +180,7 @@ export class Renderer {
 
     // Deferred shading
     private deferredProgram: DeferredProgram;
-    private deferredFramebuffer: WebGLFramebuffer;
-    private deferredColour: WebGLTexture;
-    private deferredNormal: WebGLTexture;
-    private deferredPosition: WebGLTexture;
-    private deferredDepth: WebGLTexture;
+    private readonly deferredGBuffer: GBuffer;
 
     private compositorProgram: CompositorProgram;
     private readonly outputQuad: QuadActor;
@@ -208,40 +206,5 @@ export class Renderer {
         // Reset state
         gl.enable(gl.DEPTH_TEST);
         gl.bindTexture(gl.TEXTURE_2D, null);
-    }
-
-    private initializeDeferredShading() {
-        let gl = this.gl;
-        let canvas = gl.canvas;
-
-        // Create textures
-        let width = canvas.clientWidth, height = canvas.clientHeight;
-        this.deferredColour = WebGraphics.createTexture(gl, width, height, gl.RGBA, gl.FLOAT);
-        this.deferredNormal = WebGraphics.createTexture(gl, width, height, gl.RGBA, gl.FLOAT);
-        this.deferredDepth = WebGraphics.createTexture(gl, width, height, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT);
-
-        // Create attachments
-        this.deferredFramebuffer = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.deferredFramebuffer);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, this.extDB.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D, this.deferredColour, 0);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, this.extDB.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D, this.deferredNormal, 0);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.deferredDepth, 0);
-
-        let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
-        if (!status) {
-            console.error("Could not create deferred framebuffer");
-            return false;
-        }
-
-        // Bind render targets
-        this.extDB.drawBuffersWEBGL([
-            this.extDB.COLOR_ATTACHMENT0_WEBGL,
-            this.extDB.COLOR_ATTACHMENT1_WEBGL,
-        ]);
-
-        // Reset state
-        gl.bindTexture(gl.TEXTURE_2D, null);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        return true;
     }
 }
