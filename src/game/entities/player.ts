@@ -119,8 +119,6 @@ export class Player extends Entity {
     // The current moving direction of the player, based on input
     private readonly direction = vec3.create();
 
-    
-
     // Whether the player is currently in the air
     private isAirborne = false;
 

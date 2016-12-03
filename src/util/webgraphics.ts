@@ -16,9 +16,9 @@
 
 export class WebGraphics {
 
-    private static canvas: HTMLCanvasElement;
-    private static gl: WebGLRenderingContext;
-    private static attemptedInit: boolean = false;
+    //--------------------------------------------------------------------------
+    // Public members
+    //--------------------------------------------------------------------------
 
     // Get the WebGLRenderingContext for the application. Returns null if
     // WebGL is not supported.
@@ -46,11 +46,29 @@ export class WebGraphics {
         if (gl.canvas.width != width || gl.canvas.height != height) {
             gl.canvas.width = width;
             gl.canvas.height = height;
-            gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
             return true;
         }
         return false;
     }
+
+    // Enables the given WebGL extension name
+    public static enableWebGLExtension(gl: WebGLRenderingContext, name: string) {
+        let ext = gl.getExtension(name) || gl.getExtension("WEBKIT_" + name) || gl.getExtension("MOZ_" + name);
+        if (ext) {
+            WebGraphics.extensions.push(ext);
+            return ext;
+        }
+        return null;
+    }
+
+    //--------------------------------------------------------------------------
+    // Private members
+    //--------------------------------------------------------------------------
+
+    private static canvas: HTMLCanvasElement;
+    private static gl: WebGLRenderingContext;
+    private static attemptedInit: boolean = false;
+    private static extensions: any[] = [];
 
     private static initialize() {
         WebGraphics.gl = null;
@@ -68,4 +86,5 @@ export class WebGraphics {
 
         WebGraphics.gl = gl;
     }
+
 }

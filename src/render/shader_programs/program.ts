@@ -18,72 +18,95 @@ import { mat4 } from "../../lib/gl-matrix";
 
 export abstract class Program {
 
-    // The compiled shader objects
-    private readonly vertexShader: WebGLShader;
-    private readonly fragmentShader: WebGLShader;
+    //--------------------------------------------------------------------------
+    // Public members
+    //--------------------------------------------------------------------------
 
     // The linked glsl program
     public readonly glsl: WebGLProgram;
 
-    // The number of vertex array attributes for the shader
-    public readonly attrCount: number;
+    // The attributes for the program
+    public readonly attribute: { [key:string]: number} = {};
+
+    // The uniforms for the program
+    public readonly uniform: { [key:string]: WebGLUniformLocation} = {};
 
     // Whether the glsl program is valid after construction
     public readonly isValid: boolean;
 
-    // General uniform locations
-    public uniformViewProject: WebGLUniformLocation;
-    public uniformModel: WebGLUniformLocation;
+    //--------------------------------------------------------------------------
+    // Protected members
+    //--------------------------------------------------------------------------
+
+    protected constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string) {
+        this.vertexShader = Program.createShader(gl, gl.VERTEX_SHADER, vertexSource);
+        this.fragmentShader = Program.createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+
+        if (this.vertexShader && this.fragmentShader) {
+            this.glsl = Program.createProgram(gl, this.vertexShader, this.fragmentShader);
+        }
+        this.isValid = !!this.glsl;
+        if (!this.isValid) {
+            return;
+        }
+
+        // Get the attribute locations
+        let attrCount = gl.getProgramParameter(this.glsl, gl.ACTIVE_ATTRIBUTES);
+        for (let i = 0; i < attrCount; ++i) {
+            let attr = gl.getActiveAttrib(this.glsl, i);
+            let location = gl.getAttribLocation(this.glsl, attr.name);
+            this.attribute[attr.name] = location;
+        }
+
+        // Get the uniform locations
+        let uniCount = gl.getProgramParameter(this.glsl, gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < uniCount; ++i) {
+            let uni = gl.getActiveUniform(this.glsl, i);
+            let location = gl.getUniformLocation(this.glsl, uni.name);
+            this.uniform[uni.name] = location;
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Private members
+    //--------------------------------------------------------------------------
 
     // Compiles the given shader source code into the specified shader type
     private static createShader(gl: WebGLRenderingContext, shaderType: number, source: string): WebGLShader {
         let shader = gl.createShader(shaderType);
-        gl.shaderSource(shader, source);
+        gl.shaderSource(shader, "\n" + source);
         gl.compileShader(shader);
-        if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            return shader;
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            // Print compile error to console
+            console.error(gl.getShaderInfoLog(shader));
+            gl.deleteShader(shader);
+            return null;
         }
 
-        // Print compile error to console
-        console.log(gl.getShaderInfoLog(shader));
-        gl.deleteShader(shader);
-        return null;
+        return shader;
     }
 
     // Links the given vertex and fragment shaders into a glsl program.
     // The given attribute list will be bound in order.
-    private static createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader, attribs: string[]): WebGLProgram {
+    private static createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram {
         let program = gl.createProgram();
         gl.attachShader(program, vertexShader);
         gl.attachShader(program, fragmentShader);
 
-        // Before we link, bind the attribute locations
-        let index = 0;
-        for (let attrib of attribs) {
-            gl.bindAttribLocation(program, index, attrib);
-            index++;
-        }
-
         gl.linkProgram(program);
-        if (gl.getProgramParameter(program, gl.LINK_STATUS)) {
-            return program;
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            // Print link error to console
+            console.error(gl.getProgramInfoLog(program));
+            gl.deleteProgram(program);
+            gl.deleteShader(vertexShader);
+            gl.deleteShader(fragmentShader);
+            return null;
         }
 
-        // Print link error to console
-        console.log(gl.getProgramInfoLog(program));
-        return null;
+        return program;
     }
 
-    protected constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string,
-                          attribs: string[]) {
-        this.vertexShader = Program.createShader(gl, gl.VERTEX_SHADER, vertexSource);
-        this.fragmentShader = Program.createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
-
-        this.isValid = !!(this.vertexShader && this.fragmentShader);
-        if (this.isValid) {
-            this.glsl = Program.createProgram(gl, this.vertexShader, this.fragmentShader, attribs);
-            this.attrCount = attribs.length;
-            this.isValid = !!this.glsl;
-        }
-    }
+    // The compiled shader objects
+    private readonly vertexShader: WebGLShader;
+    private readonly fragmentShader: WebGLShader;
 }

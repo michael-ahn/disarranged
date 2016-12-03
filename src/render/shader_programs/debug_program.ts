@@ -16,29 +16,35 @@
 
 import { Program } from "./program";
 
-export class BasicProgram extends Program {
+export class DebugProgram extends Program {
 
     private static vertexSource = [
-        "uniform mat4 u_viewProject;",
-        "uniform mat4 u_model;",
+        "attribute vec2 a_pos;",
+        "attribute vec2 a_tex;",
 
-        "attribute vec4 a_pos;",
+        "varying vec2 v_texCoord;",
 
-        "void main() {",
-            "gl_Position = u_viewProject * u_model * a_pos;",
+        "void main(void) {",
+            "v_texCoord = a_tex;",
+            "gl_Position = vec4(a_pos, 0.0, 1.0);",
         "}",
     ].join("\n");
 
     private static fragmentSource = [
         "precision mediump float;",
 
-        "void main() {",
-            "gl_FragColor = vec4(1, 0, 0.5, 1);",
+        "uniform sampler2D u_textureMap;",
+
+        "varying vec2 v_texCoord;",
+
+        "void main(void) {",
+            "vec4 colour = texture2D(u_textureMap, v_texCoord);",
+            "gl_FragColor = colour;",
         "}",
     ].join("\n");
 
     constructor(gl: WebGLRenderingContext) {
-        super(gl, BasicProgram.vertexSource, BasicProgram.fragmentSource);
+        super(gl, DebugProgram.vertexSource, DebugProgram.fragmentSource);
     }
 
 }

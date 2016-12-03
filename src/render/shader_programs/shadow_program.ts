@@ -16,16 +16,20 @@
 
 import { Program } from "./program";
 
-export class BasicProgram extends Program {
+export class ShadowProgram extends Program {
 
     private static vertexSource = [
-        "uniform mat4 u_viewProject;",
+        "precision mediump float;",
+
+        "uniform mat4 u_projectView;",
+        "uniform mat4 u_project;",
         "uniform mat4 u_model;",
 
         "attribute vec4 a_pos;",
+        "attribute vec4 a_norm;",
 
         "void main() {",
-            "gl_Position = u_viewProject * u_model * a_pos;",
+            "gl_Position = u_projectView * u_model * a_pos;",
         "}",
     ].join("\n");
 
@@ -33,12 +37,11 @@ export class BasicProgram extends Program {
         "precision mediump float;",
 
         "void main() {",
-            "gl_FragColor = vec4(1, 0, 0.5, 1);",
         "}",
     ].join("\n");
 
     constructor(gl: WebGLRenderingContext) {
-        super(gl, BasicProgram.vertexSource, BasicProgram.fragmentSource);
+        super(gl, ShadowProgram.vertexSource, ShadowProgram.fragmentSource);
     }
 
 }

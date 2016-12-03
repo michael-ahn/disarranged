@@ -16,6 +16,7 @@
 
 import { mat4 } from "../lib/gl-matrix";
 import { RenderStyle } from "../render/renderer";
+import { Program } from "../render/shader_programs/program";
 
 export abstract class Actor {
 
@@ -30,8 +31,20 @@ export abstract class Actor {
     public readonly modelTransform = mat4.create();
 
     // Draws the actor for the given WebGL context
-    public draw(gl: WebGLRenderingContext) {
+    public draw(gl: WebGLRenderingContext, program: Program) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ebo);
+
+        // Set model transform
+        gl.uniformMatrix4fv(program.uniform["u_model"], false, this.modelTransform);
+
+        // Configure attributes
+        gl.enableVertexAttribArray(program.attribute["a_pos"]);
+        gl.enableVertexAttribArray(program.attribute["a_norm"]);
+        gl.vertexAttribPointer(program.attribute["a_pos"], 3, gl.FLOAT, false, 24, 0);
+        gl.vertexAttribPointer(program.attribute["a_norm"], 3, gl.FLOAT, false, 24, 12);
+
+        // Draw
         gl.drawElements(gl.TRIANGLES, this.elementCount, gl.UNSIGNED_SHORT, 0);
     }
 
@@ -50,10 +63,12 @@ export abstract class Actor {
 
     protected constructor(gl: WebGLRenderingContext, vboData: Float32Array, eboData: Uint16Array) {
         // Create the element buffer
-        this.ebo = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ebo);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, eboData, gl.STATIC_DRAW);
-        this.elementCount = eboData.length;
+        if (eboData) {
+            this.ebo = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ebo);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, eboData, gl.STATIC_DRAW);
+            this.elementCount = eboData.length;
+        }
 
         // Create the vertex buffer
         this.vbo = gl.createBuffer();

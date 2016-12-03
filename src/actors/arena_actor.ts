@@ -29,13 +29,6 @@ export class ArenaActor extends Actor {
         super(gl, ArenaActor.vertexData, ArenaActor.elementData);
     }
 
-    public draw(gl: WebGLRenderingContext) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 6 * 4, 0);
-        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 6 * 4, 3 * 4);
-        super.draw(gl);
-    }
-
     // Calculates the interpolated height at the given coordinates
     public sampleHeight(x: number, z: number): number {
         let L = 31, origin = -25, spacing = 3.0/5.0;

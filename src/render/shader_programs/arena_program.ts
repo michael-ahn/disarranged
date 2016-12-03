@@ -18,43 +18,57 @@ import { Program } from "./program";
 
 export class ArenaProgram extends Program {
 
-    private static vertexSource = `
-        uniform mat4 u_viewProject;
-        uniform mat4 u_model;
+    private static vertexSource = [
+        "precision mediump float;",
 
-        attribute vec4 a_pos;
-        attribute vec3 a_norm;
+        "attribute vec3 a_pos;",
+        "attribute vec3 a_norm;",
 
-        varying vec3 v_norm;
+        "uniform mat4 u_projectView;",
+        "uniform mat4 u_model;",
+        "uniform mat4 u_lightProjectView;",
 
-        void main() {
-            gl_Position = u_viewProject * u_model * a_pos;
-            v_norm = a_norm;
-        }
-    `;
+        "varying vec3 v_norm;",
+        "varying vec4 v_shadowPos;",
 
-    private static fragmentSource = `
-        precision mediump float;
+        "const mat4 c_depthBias = mat4(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);",
 
-        varying vec3 v_norm;
+        "void main(void) {",
+            "vec4 position =  u_model * vec4(a_pos, 1.0);",
+            "v_norm = a_norm;",
+            "v_shadowPos = c_depthBias * u_lightProjectView * position;",
+            "gl_Position = u_projectView * position;",
+        "}"
+    ].join("\n");
 
-        void main() {
-            vec3 lightdir = normalize(vec3(1, 1, 1));
-            float light = dot(normalize(v_norm), lightdir);
+    private static fragmentSource = [
+        "precision mediump float;",
 
-            gl_FragColor = vec4(0, 1, 0.5, 1);
-            gl_FragColor.rgb *= light;
-        }
-    `;
+        "uniform vec3 u_lightPos;",
+
+        "uniform sampler2D u_shadowMap;",
+
+        "varying vec3 v_norm;",
+        "varying vec4 v_shadowPos;",
+
+        "void main(void) {",
+            // Calculate the light
+            "float lightFactor = dot(normalize(v_norm), u_lightPos);",
+            "vec3 colour = vec3(0, 1, 0.5);",
+
+            // Calculate effect from shadow
+            "vec3 depth = v_shadowPos.xyz / v_shadowPos.w;",
+            "depth.z *= 0.999;",
+            "float shadow = texture2D(u_shadowMap, depth.xy).r;",
+            "float shadowFactor = shadow < depth.z ? 0.0 : 1.0;",
+
+            "vec3 outColour = colour * ((lightFactor * shadowFactor) + 0.2);",
+            "gl_FragColor = vec4(outColour, 1);",
+        "}"
+    ].join("\n");
 
     constructor(gl: WebGLRenderingContext) {
-        super(gl, ArenaProgram.vertexSource, ArenaProgram.fragmentSource, ["a_pos", "a_norm"]);
-        
-        // Get uniform locations
-        if (this.isValid) {
-            this.uniformViewProject = gl.getUniformLocation(this.glsl, "u_viewProject");
-            this.uniformModel = gl.getUniformLocation(this.glsl, "u_model");
-        }
+        super(gl, ArenaProgram.vertexSource, ArenaProgram.fragmentSource);
     }
 
 }

@@ -19,6 +19,10 @@ import { Program } from "./shader_programs/program";
 import { BasicProgram } from "./shader_programs/basic_program";
 import { ArenaProgram } from "./shader_programs/arena_program";
 import { Camera } from "./camera";
+import { Light } from "./light";
+import { Shadows } from "./shadows";
+import { DebugActor } from "../actors/debug_actor";
+import { DebugProgram } from "./shader_programs/debug_program";
 
 // The type of shaders available for rendering with
 export const enum RenderStyle {
@@ -41,72 +45,103 @@ export class Renderer {
         // Create and initialize shader programs
         this.programs = [];
         this.programs[RenderStyle.Basic] = new BasicProgram(gl);
-        this.programs[RenderStyle.Arena] = new ArenaProgram(gl);
+        // this.programs[RenderStyle.Arena] = new ArenaProgram(gl);
+        this.meshShader = new ArenaProgram(gl);
 
         // Check that every program compiled correctly
-        this.isReady = this.programs.every(p => p.isValid);
+        // this.isReady = this.programs.every(p => p.isValid);
+        this.isReady = this.meshShader.isValid;
 
-        // Set default rendering state
+        // Create the light for the scene
+        this.light = new Light(0, 1, -1, 25);
+
+        // Initialize shadow rendering
+        this.shadows = new Shadows(gl, 512);
+        this.isReady = this.isReady && this.shadows.isReady;
+
+        // Initialize debugging
+        this.debugQuad = new DebugActor(gl);
+        this.debugProgram = new DebugProgram(gl);
+        this.isReady = this.isReady && this.debugProgram.isValid;
+
+        // Set initial rendering state
         if (this.isReady) {
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.clearDepth(1.0);
             gl.enable(gl.DEPTH_TEST);
             gl.enable(gl.CULL_FACE);
+            gl.cullFace(gl.BACK);
+            gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         }
     }
 
     // Draw the given actors onto the viewport
-    public drawScene(actors: Actor[], camera: Camera) {
-        // Set the camera view-projection matrix
-        if (this.activeProgram !== null) {
-            this.gl.uniformMatrix4fv(this.activeProgram.uniformViewProject, false, camera.viewTransform);
-        }
+    public draw(actors: Actor[], camera: Camera) {
+        let gl = this.gl;
+        let canvas = gl.canvas;
 
+        // Draw the shadow map
+        this.shadows.drawToShadowTexture(actors, this.light);
+
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        let program = this.meshShader;
+
+        // Set the active program
+        gl.useProgram(program.glsl);
+
+        // Set the general uniforms
+        gl.uniformMatrix4fv(program.uniform["u_projectView"], false, camera.projectViewTransform);
+        gl.uniform3fv(program.uniform["u_lightPos"], this.light.position);
+        gl.uniformMatrix4fv(program.uniform["u_lightProjectView"], false, this.light.projectViewTransform);
+
+        // Set the shadow map texture
+        gl.activeTexture(gl.TEXTURE0);
+        gl.uniform1i(program.uniform["u_shadowMap"], 0);
+        gl.bindTexture(gl.TEXTURE_2D, this.shadows.depthTexture);
+
+        // Draw the actors
         for (let actor of actors) {
-            // Change the active shader program to the shader the actor needs
-            if (this.activeProgramId !== actor.renderStyle) {
-                this.activateProgramAtIndex(actor.renderStyle);
-
-                // Set the camera view-projection matrix
-                this.gl.uniformMatrix4fv(this.activeProgram.uniformViewProject, false, camera.viewTransform);
-            }
-
-            // Set uniforms for this actor
-            this.gl.uniformMatrix4fv(this.activeProgram.uniformModel, false, actor.modelTransform);
-
-            actor.draw(this.gl);
+            actor.draw(gl, program);
         }
+
+        // Reset state
+        gl.bindTexture(gl.TEXTURE_2D, null);
     }
 
     //--------------------------------------------------------------------------
-    // Protected/Private members
+    // Private members
     //--------------------------------------------------------------------------
 
     private readonly gl: WebGLRenderingContext;
+    private readonly meshShader: Program;
     private readonly programs: Program[];
+    private readonly shadows: Shadows;
 
-    // The currently active shader program
-    private activeProgram: Program = null;
-    private activeProgramId = -1;
-    private activeAttrs = 0;
+    private readonly light: Light;
 
-    private activateProgramAtIndex(index: number) {
-        this.activeProgramId = index;
+    private activeProgram: Program;
 
-        // Use the shader program associated at the index
-        this.activeProgram = this.programs[this.activeProgramId];
-        this.gl.useProgram(this.activeProgram.glsl);
+    // Debugging
+    private readonly debugQuad: DebugActor;
+    private readonly debugProgram: DebugProgram;
 
-        // Enable or disable vertex attributes until we match the program
-        if (this.activeProgram.attrCount !== this.activeAttrs) {
-            if (this.activeProgram.attrCount > this.activeAttrs) {
-                for (; this.activeAttrs < this.activeProgram.attrCount; this.activeAttrs++) {
-                    this.gl.enableVertexAttribArray(this.activeAttrs);
-                }
-            } else {
-                for (; this.activeAttrs > this.activeProgram.attrCount; this.activeAttrs--) {
-                    this.gl.disableVertexAttribArray(this.activeAttrs - 1);
-                }
-            }
-        }
+    private drawTextureDebugger(texture: WebGLTexture) {
+        let gl = this.gl;
+        // Use the debugging shader
+        gl.useProgram(this.debugProgram.glsl);
+
+        // Attach the texture to render
+        gl.activeTexture(gl.TEXTURE0);
+        gl.uniform1i(this.debugProgram.uniform["u_textureMap"], 0);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+
+        // Disable depth testing and draw
+        gl.disable(gl.DEPTH_TEST);
+        this.debugQuad.draw(gl, this.debugProgram);
+
+        // Reset state
+        gl.enable(gl.DEPTH_TEST);
+        gl.bindTexture(gl.TEXTURE_2D, null);
     }
-
 }

@@ -29,13 +29,6 @@ export class BallActor extends Actor {
         super(gl, BallActor.vertexData, BallActor.elementData);
     }
 
-    public draw(gl: WebGLRenderingContext) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
-        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 6 * 4, 0);
-        gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 6 * 4, 3 * 4);
-        super.draw(gl);
-    }
-
     //--------------------------------------------------------------------------
     // Private members
     //--------------------------------------------------------------------------

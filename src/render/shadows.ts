@@ -1,0 +1,138 @@
+//
+// Copyright 2016 Michael Ahn m3ahn@edu.uwaterloo.ca
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+import { vec3, mat4 } from "../lib/gl-matrix";
+import { WebGraphics } from "../util/webgraphics";
+import { Program } from "./shader_programs/program";
+import { ShadowProgram } from "./shader_programs/shadow_program";
+import { Actor } from "../actors/actor";
+import { Light } from "./light";
+
+export class Shadows {
+
+    //--------------------------------------------------------------------------
+    // Public members
+    //--------------------------------------------------------------------------
+
+    // Whether the shadows are ready to render
+    public readonly isReady: boolean;
+
+    // The shader program to render the shadows
+    public readonly program: ShadowProgram;
+
+    // The dimensions of the shadow map
+    public readonly mapSize = 512;
+
+    // The texture storing the depth information
+    public readonly depthTexture: WebGLTexture;
+    public readonly colourTexture: WebGLTexture;
+    public readonly bogusTexture: WebGLTexture;
+
+    public readonly framebuffer: WebGLFramebuffer;
+
+    public constructor(gl: WebGLRenderingContext, size: number) {
+        this.gl = gl;
+
+        // We need the depth texture extension
+        if (!WebGraphics.enableWebGLExtension(gl, "WEBGL_depth_texture")) {
+            console.error("Depth textures are not supported");
+            this.isReady = false;
+            return;
+        }
+
+        // Create a color texture
+        this.colourTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.colourTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+        this.bogusTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.bogusTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+        // Create the depth texture used as our shadow map
+        this.depthTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, size, size, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
+
+        this.framebuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.colourTexture, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthTexture, 0);
+
+        // Get status and clean up
+        let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+        if (!status) {
+            console.error("Could not create shadow framebuffer");
+            this.isReady = false;
+            return;
+        }
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        // Create the shader program
+        this.program = new ShadowProgram(gl);
+        this.isReady = this.program.isValid;
+    }
+
+    public drawToShadowTexture(actors: Actor[], light: Light) {
+        let gl = this.gl;
+        let canvas = gl.canvas;
+
+        // Render to the shadow's framebuffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+
+        // Set the viewport to match the texture and disable colour rendering
+        gl.viewport(0, 0, this.mapSize, this.mapSize);
+        gl.colorMask(false, false, false, false);
+        gl.cullFace(gl.FRONT);
+        gl.clear(gl.DEPTH_BUFFER_BIT);
+
+        // Use the shadow shader
+        gl.useProgram(this.program.glsl);
+
+        // Move view from the point-of-view of the light
+        gl.uniformMatrix4fv(this.program.uniform["u_projectView"], false, light.projectViewTransform);
+
+        // Draw the actors
+        for (let actor of actors) {
+            actor.draw(gl, this.program);
+        }
+
+        // Reset the state
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.colorMask(true, true, true, true);
+        gl.cullFace(gl.BACK);
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    }
+
+    //--------------------------------------------------------------------------
+    // Private members
+    //--------------------------------------------------------------------------
+
+    private readonly gl: WebGLRenderingContext;
+
+}

@@ -16,8 +16,9 @@
 
 import { Actor } from "./actor";
 import { RenderStyle } from "../render/renderer";
+import { Program } from "../render/shader_programs/program";
 
-export class BasicActor extends Actor {
+export class DebugActor extends Actor {
 
     //--------------------------------------------------------------------------
     // Public members
@@ -26,7 +27,20 @@ export class BasicActor extends Actor {
     public readonly renderStyle = RenderStyle.Basic;
 
     public constructor(gl: WebGLRenderingContext) {
-        super(gl, BasicActor.vertexData, BasicActor.elementData);
+        super(gl, DebugActor.vertexData, null);
+    }
+
+    public draw(gl: WebGLRenderingContext, program: Program) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+
+        // Configure attributes
+        gl.enableVertexAttribArray(program.attribute["a_pos"]);
+        gl.enableVertexAttribArray(program.attribute["a_tex"]);
+        gl.vertexAttribPointer(program.attribute["a_pos"], 2, gl.FLOAT, false, 16, 0);
+        gl.vertexAttribPointer(program.attribute["a_tex"], 2, gl.FLOAT, false, 16, 8);
+
+        // Draw
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
     //--------------------------------------------------------------------------
@@ -34,13 +48,12 @@ export class BasicActor extends Actor {
     //--------------------------------------------------------------------------
 
     private static vertexData = new Float32Array([
-        0, 0, 0, 0, 0, -1,
-        0, 10, 0, 0, 0, -1,
-        -15, 0, 0, 0, 0, -1,
-    ]);
-
-    private static elementData = new Uint16Array([
-        0, 1, 2,
+        0.5,  1,  0, 1,
+        0.5, 0.5,  0, 0,
+         1,  1,  1, 1,
+        0.5, 0.5,  0, 0,
+         1, 0.5,  1, 0,
+         1,  1,  1, 1
     ]);
 
 }

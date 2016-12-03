@@ -27,6 +27,12 @@ export class Camera {
     // The world to projected view transformation.
     public readonly viewTransform = mat4.create();
 
+    // The projection matrix
+    public readonly projectTransform = mat4.create();
+
+    // Data to store intermediate values
+    public readonly projectViewTransform = mat4.create();
+
     // The position of the camera in world space.
     public readonly eyePosition = vec3.create();
 
@@ -52,14 +58,14 @@ export class Camera {
     // Rebuilds the view transformation matrix using the current eye positon
     // and look position.
     public update() {
-        mat4.lookAt(this.scratchMatrix, this.eyePosition, this.lookPosition, this.upDirection);
-        mat4.multiply(this.viewTransform, this.perspectiveTransform, this.scratchMatrix);
+        mat4.lookAt(this.viewTransform, this.eyePosition, this.lookPosition, this.upDirection);
+        mat4.multiply(this.projectViewTransform, this.projectTransform, this.viewTransform);
     }
 
     // Reconstructs the projection matrix for the camera.
     // Should be called whenever the aspect ratio of the viewport changes
     public buildProjection() {
-        mat4.perspective(this.perspectiveTransform,
+        mat4.perspective(this.projectTransform,
             3.14159 / 3, // Field of view: 60deg
             this.gl.canvas.clientWidth / this.gl.canvas.clientHeight,
             1, 200.0); // Near and far planes
@@ -71,13 +77,6 @@ export class Camera {
 
     private readonly gl: WebGLRenderingContext;
 
-    // The projection matrix
-    private readonly perspectiveTransform = mat4.create();
-
     // The orientation of the camera
     private readonly upDirection = vec3.create();
-
-    // Data to store intermediate values
-    private readonly scratchMatrix = mat4.create();
-    private readonly scratchVector = vec3.create();
 }

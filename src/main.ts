@@ -63,34 +63,11 @@ function gameTick() {
         camera.buildProjection();
     }
 
-    testTime += 0.01666667;
-
-    let r = 0, g = 0, b = 0;
-    if (keyboard.isKeyDown(KeyCode.W)) {
-        r = g = b = 0.4;
-    }
-    if (keyboard.isKeyDown(KeyCode.A)) {
-        r = 1;
-    }
-    if (keyboard.isKeyDown(KeyCode.S)) {
-        g = 1;
-    }
-    if (keyboard.isKeyDown(KeyCode.D)) {
-        b = 1;
-    }
-    let brightFactor = 0.25 * Math.sin(0.62831853 * testTime) + 0.75;
-    r *= brightFactor;
-    g *= brightFactor;
-    b *= brightFactor;
-
-    gl.clearColor(r, g, b, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
     game.tick(keyboard);
 
     camera.follow(game.player, game.enemy);
 
-    renderer.drawScene(game.actors, camera);
+    renderer.draw(game.actors, camera);
 }
 
 init();
