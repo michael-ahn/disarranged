@@ -14,19 +14,24 @@
 // limitations under the License.
 //
 
-import { Actor } from "../actors/actor";
 import { Program } from "./shader_programs/program";
 import { BasicProgram } from "./shader_programs/basic_program";
 import { ArenaProgram } from "./shader_programs/arena_program";
+import { DeferredProgram } from "./shader_programs/deferred_program";
+import { PostProcessProgram } from "./shader_programs/postprocess_program";
+import { CompositorProgram } from "./shader_programs/compositor_program";
+import { DebugProgram } from "./shader_programs/debug_program";
+
+import { RenderShadows } from "./render_shadows";
+import { GBuffer } from "./gbuffer";
+
 import { Camera } from "./camera";
 import { Light } from "./light";
-import { GBuffer } from "./gbuffer";
-import { RenderShadows } from "./render_shadows";
+
+import { Actor } from "../actors/actor";
 import { QuadActor } from "../actors/quad_actor";
 import { DebugActor } from "../actors/debug_actor";
-import { DebugProgram } from "./shader_programs/debug_program";
-import { DeferredProgram } from "./shader_programs/deferred_program";
-import { CompositorProgram } from "./shader_programs/compositor_program";
+
 import { WebGraphics } from "../util/webgraphics";
 import { mat4, vec3 } from "../lib/gl-matrix";
 
@@ -62,6 +67,7 @@ export class Renderer {
         // Create and initialize shader programs
         this.meshShader = new ArenaProgram(gl);
         this.deferredShader = new DeferredProgram(gl);
+        this.postProcessShader = new PostProcessProgram(gl);
         this.compositorShader = new CompositorProgram(gl);
         this.debugShader = new DebugProgram(gl);
 
@@ -69,6 +75,7 @@ export class Renderer {
         this.programs = [
             this.meshShader,
             this.deferredShader,
+            this.postProcessShader,
             this.compositorShader,
             this.debugShader,
         ];
@@ -85,7 +92,10 @@ export class Renderer {
 
         // Initialize deferred shading and gbuffers
         this.deferredGBuffer = new GBuffer(gl, extDB);
-        this.isReady = this.isReady && this.deferredGBuffer.isValid;
+        this.postProcessGBuffer = new GBuffer(gl, extDB);
+        this.isReady = this.isReady &&
+                       this.deferredGBuffer.isValid &&
+                       this.postProcessGBuffer.isValid;
 
         // Set initial rendering state
         if (this.isReady) {
@@ -107,6 +117,9 @@ export class Renderer {
         // Do the first deferred rendering step
         this.drawDeferred(actors, camera);
 
+        // Do the post processing step
+        this.postProcess(camera);
+
         // Composite the scene
         this.composite(camera);
     }
@@ -122,6 +135,7 @@ export class Renderer {
     private readonly meshShader: Program;
     private readonly debugShader: DebugProgram;
     private readonly deferredShader: DeferredProgram;
+    private readonly postProcessShader: PostProcessProgram;
     private readonly compositorShader: CompositorProgram;
 
     // Objects
@@ -142,26 +156,66 @@ export class Renderer {
     // Draw with deferred shading and populate the gbuffer
     private drawDeferred(actors: Actor[], camera: Camera) {
         let gl = this.gl;
-        let canvas = gl.canvas;
-        let program = this.deferredShader;
+        let shader = this.deferredShader;
 
-        // Set the active program
-        gl.useProgram(program.glsl);
+        // Set the active shader program
+        gl.useProgram(shader.glsl);
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.deferredGBuffer.framebuffer);
 
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         // Set the general uniforms
-        gl.uniformMatrix4fv(program.uniform["u_projectView"], false, camera.projectViewTransform);
-        gl.uniform3fv(program.uniform["u_lightPos"], this.light.position);
-        gl.uniformMatrix4fv(program.uniform["u_lightProjectView"], false, this.light.projectViewTransform);
+        gl.uniformMatrix4fv(shader.uniform["u_projectView"], false, camera.projectViewTransform);
+        gl.uniform3fv(shader.uniform["u_lightPos"], this.light.position);
+        gl.uniformMatrix4fv(shader.uniform["u_lightProjectView"], false, this.light.projectViewTransform);
 
         // Draw the actors
         for (let actor of actors) {
-            actor.draw(gl, program);
+            actor.draw(gl, shader);
         }
 
         // Reset state
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    // Applies effects like contours and shading
+    private postProcess(camera: Camera) {
+        let gl = this.gl;
+        let canvas = gl.canvas;
+        let shader = this.postProcessShader;
+
+        // Set the active shader program
+        gl.useProgram(shader.glsl);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.postProcessGBuffer.framebuffer);
+
+        // Set uniforms
+        mat4.multiply(this.viewToLightTransform, this.light.biasedProjectViewTransform, camera.invViewTransform);
+        gl.uniformMatrix4fv(shader.uniform["u_invProj"], false, camera.invProjectTransform);
+        gl.uniformMatrix4fv(shader.uniform["u_viewToLight"], false, this.viewToLightTransform);
+        gl.uniform2f(shader.uniform["u_invScreenDims"], 1.0 / canvas.clientWidth, 1.0 / canvas.clientHeight);
+
+        // Set target textures from the deferred rendering step
+        gl.activeTexture(gl.TEXTURE0);
+        gl.uniform1i(shader.uniform["u_colourTexture"], 0);
+        gl.bindTexture(gl.TEXTURE_2D, this.deferredGBuffer.colourTexture);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.uniform1i(shader.uniform["u_normalTexture"], 1);
+        gl.bindTexture(gl.TEXTURE_2D, this.deferredGBuffer.normalTexture);
+        gl.activeTexture(gl.TEXTURE2);
+        gl.uniform1i(shader.uniform["u_depthTexture"], 2);
+        gl.bindTexture(gl.TEXTURE_2D, this.deferredGBuffer.depthTexture);
+        // Set the shadow map texture from the shadow map step
+        gl.activeTexture(gl.TEXTURE3);
+        gl.uniform1i(shader.uniform["u_shadowMap"], 3);
+        gl.bindTexture(gl.TEXTURE_2D, this.shadows.depthTexture);
+
+         // Draw the quad without depth testing
+        gl.disable(gl.DEPTH_TEST);
+        this.outputQuad.draw(gl, shader);
+        gl.enable(gl.DEPTH_TEST);
+
+        // Reset state
+        gl.bindTexture(gl.TEXTURE_2D, null);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
 
@@ -169,34 +223,21 @@ export class Renderer {
     private composite(camera: Camera) {
         let gl = this.gl;
         let canvas = gl.canvas;
-        let program = this.compositorShader;
+        let shader = this.compositorShader;
 
-        gl.useProgram(program.glsl);
+        gl.useProgram(shader.glsl);
 
-        // Set uniforms
-        mat4.multiply(this.viewToLightTransform, this.light.biasedProjectViewTransform, camera.invViewTransform);
-        gl.uniformMatrix4fv(program.uniform["u_invProj"], false, camera.invProjectTransform);
-        gl.uniformMatrix4fv(program.uniform["u_viewToLight"], false, this.viewToLightTransform);
-        gl.uniform2f(program.uniform["u_invScreenDims"], 1.0 / canvas.clientWidth, 1.0 / canvas.clientHeight);
-
-        // Set target textures
+        // Set target textures from the post process step
         gl.activeTexture(gl.TEXTURE0);
-        gl.uniform1i(program.uniform["u_colourTexture"], 0);
-        gl.bindTexture(gl.TEXTURE_2D, this.deferredGBuffer.colourTexture);
-        gl.activeTexture(gl.TEXTURE1);
-        gl.uniform1i(program.uniform["u_normalTexture"], 1);
-        gl.bindTexture(gl.TEXTURE_2D, this.deferredGBuffer.normalTexture);
-        gl.activeTexture(gl.TEXTURE2);
-        gl.uniform1i(program.uniform["u_depthTexture"], 2);
-        gl.bindTexture(gl.TEXTURE_2D, this.deferredGBuffer.depthTexture);
-        // Set the shadow map texture
-        gl.activeTexture(gl.TEXTURE3);
-        gl.uniform1i(program.uniform["u_shadowMap"], 3);
-        gl.bindTexture(gl.TEXTURE_2D, this.shadows.depthTexture);
+        gl.uniform1i(shader.uniform["u_colourTexture"], 0);
+        gl.bindTexture(gl.TEXTURE_2D, this.postProcessGBuffer.colourTexture);
+        // gl.activeTexture(gl.TEXTURE1);
+        // gl.uniform1i(shader.uniform["u_normalTexture"], 1);
+        // gl.bindTexture(gl.TEXTURE_2D, this.postProcessGBuffer.normalTexture);
 
         // Draw the quad without depth testing
         gl.disable(gl.DEPTH_TEST);
-        this.outputQuad.draw(gl, program);
+        this.outputQuad.draw(gl, shader);
         gl.enable(gl.DEPTH_TEST);
 
         // Reset state
