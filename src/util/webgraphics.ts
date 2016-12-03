@@ -53,10 +53,14 @@ export class WebGraphics {
 
     // Enables the given WebGL extension name
     public static enableWebGLExtension(gl: WebGLRenderingContext, name: string) {
-        let ext = gl.getExtension(name) || gl.getExtension("WEBKIT_" + name) || gl.getExtension("MOZ_" + name);
-        if (ext) {
-            WebGraphics.extensions.push(ext);
-            return ext;
+        let prefixes = ["WEBGL_", "WEBKIT_WEBGL_", "MOZ_WEBGL_", "GL_EXT_", "EXT_"];
+        let ext: any = null;
+        for (let prefix of prefixes) {
+            ext = gl.getExtension(prefix + name);
+            if (ext) {
+                WebGraphics.extensions.push(ext);
+                return ext;
+            }
         }
         return null;
     }

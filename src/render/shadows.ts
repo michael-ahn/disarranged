@@ -46,7 +46,7 @@ export class Shadows {
         this.gl = gl;
 
         // We need the depth texture extension
-        if (!WebGraphics.enableWebGLExtension(gl, "WEBGL_depth_texture")) {
+        if (!WebGraphics.enableWebGLExtension(gl, "depth_texture")) {
             console.error("Depth textures are not supported");
             this.isReady = false;
             return;
