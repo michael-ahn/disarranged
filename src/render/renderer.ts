@@ -96,40 +96,6 @@ export class Renderer {
         }
     }
 
-    // Draw the given actors onto the viewport
-    public draw(actors: Actor[], camera: Camera) {
-        let gl = this.gl;
-        let canvas = gl.canvas;
-
-        // Draw the shadow map
-        this.shadows.drawToShadowTexture(actors, this.light);
-
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        let program = this.meshShader;
-
-        // Set the active program
-        gl.useProgram(program.glsl);
-
-        // Set the general uniforms
-        gl.uniformMatrix4fv(program.uniform["u_projectView"], false, camera.projectViewTransform);
-        gl.uniform3fv(program.uniform["u_lightPos"], this.light.position);
-        gl.uniformMatrix4fv(program.uniform["u_lightProjectView"], false, this.light.projectViewTransform);
-
-        // Set the shadow map texture
-        gl.activeTexture(gl.TEXTURE0);
-        gl.uniform1i(program.uniform["u_shadowMap"], 0);
-        gl.bindTexture(gl.TEXTURE_2D, this.shadows.depthTexture);
-
-        // Draw the actors
-        for (let actor of actors) {
-            actor.draw(gl, program);
-        }
-
-        // Reset state
-        gl.bindTexture(gl.TEXTURE_2D, null);
-    }
-
     // Draw with deferred shading
     public drawDeferred(actors: Actor[], camera: Camera) {
         let gl = this.gl;
@@ -167,6 +133,7 @@ export class Renderer {
         mat4.multiply(this.viewToLightTransform, this.light.biasedProjectViewTransform, camera.invViewTransform);
         gl.uniformMatrix4fv(program.uniform["u_invProj"], false, camera.invProjectTransform);
         gl.uniformMatrix4fv(program.uniform["u_viewToLight"], false, this.viewToLightTransform);
+        gl.uniform2f(program.uniform["u_invScreenDims"], 1.0 / canvas.clientWidth, 1.0 / canvas.clientHeight);
 
         // Set target textures
         gl.activeTexture(gl.TEXTURE0);

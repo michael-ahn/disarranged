@@ -35,6 +35,7 @@ export class CompositorProgram extends Program {
 
         "uniform mat4 u_invProj;",
         "uniform mat4 u_viewToLight;",
+        "uniform vec2 u_invScreenDims;",
 
         "uniform sampler2D u_colourTexture;",
         "uniform sampler2D u_normalTexture;",
@@ -45,7 +46,6 @@ export class CompositorProgram extends Program {
 
         "void main(void) {",
             "vec4 colour = texture2D(u_colourTexture, v_texCoord);",
-            "vec4 normal = texture2D(u_normalTexture, v_texCoord);",
             "float depth = texture2D(u_depthTexture, v_texCoord).r;",
 
             // Calculate light-view-space position from depth
@@ -56,12 +56,42 @@ export class CompositorProgram extends Program {
             "vec3 shadow_depth = light_pos.xyz / light_pos.w;",
             "float shadow = texture2D(u_shadowMap, shadow_depth.xy).r;",
             "shadow_depth.z = min(shadow_depth.z, 1.0) - 0.005;",
-            "float shadowFactor = shadow < shadow_depth.z ? 0.4 : 1.0;",
+            "float s = shadow < shadow_depth.z ? 0.4 : 1.0;",
+
+            "vec2 xy = v_texCoord;",
+            "float dx = u_invScreenDims.x, dy = u_invScreenDims.y;",
+
+            "float wave1 = dx * sin(xy.x * 6.28 / (10.0 * dx));",
+            "float wave2 = dx * sin(xy.x * 6.28 / (20.0 * dx) + 10.0);",
+            "float wave3 = dx * sin(xy.x * 6.28 / (50.0 * dx) + 20.0);",
+            "xy.x = xy.x + 0.2 * wave1 + 2.0 * wave2 + 4.0 * wave3;",
+            "xy.y = xy.y + 0.3 * wave1 + 3.2 * wave2 + 3.7 * wave3;",
+
+            // Sobel operator to draw edges
+            "vec3 nlb = texture2D(u_normalTexture, xy + vec2(-dx, -dy)).xyz;",
+            "vec3 nb = texture2D(u_normalTexture, xy + vec2(0, -dy)).xyz;",
+            "vec3 nrb = texture2D(u_normalTexture, xy + vec2(dx, -dy)).xyz;",
+
+            "vec3 nl = texture2D(u_normalTexture, xy + vec2(-dx, 0)).xyz;",
+            "vec3 nr = texture2D(u_normalTexture, xy + vec2(dx, 0)).xyz;",
+
+            "vec3 nlt = texture2D(u_normalTexture, xy + vec2(-dx, dy)).xyz;",
+            "vec3 nt = texture2D(u_normalTexture, xy + vec2(0, dy)).xyz;",
+            "vec3 nrt = texture2D(u_normalTexture, xy + vec2(dx, dy)).xyz;",
+
+            "vec3 gx = -nlt - 2.0*nl - nlb + nrt + 2.0*nr + nrb;",
+            "vec3 gy = -nlb - 2.0*nb - nrb + nlt + 2.0*nt + nrt;",
+
+            "float gx2 = dot(gx, gx);",
+            "float gy2 = dot(gy, gy);",
+            "float g = sqrt(gx2 + gy2);",
+            "g = 1.0 - 5.0 * g * float(g > 0.6);",
 
             // Affect the colour
-            "colour.xyz *= shadowFactor;",
+            "vec3 c = colour.xyz;",
+            "c = c * s * g;",
 
-            "gl_FragColor = vec4(colour.xyz, 1);",
+            "gl_FragColor = vec4(c, 1);",
         "}",
     ].join("\n");
 
