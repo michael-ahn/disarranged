@@ -67,7 +67,7 @@ function gameTick() {
 
     camera.follow(game.player, game.enemy);
 
-    renderer.drawDeferred(game.actors, camera);
+    renderer.draw(game.actors, camera);
 }
 
 init();

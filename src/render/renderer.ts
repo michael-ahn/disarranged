@@ -49,44 +49,43 @@ export class Renderer {
         this.gl = gl;
 
         // Get necessary extensions
-        this.extDB = WebGraphics.enableWebGLExtension(gl, "draw_buffers");
-        if (!this.extDB) {
+        let extDB = WebGraphics.enableWebGLExtension(gl, "draw_buffers");
+        if (!extDB) {
             console.error("Draw buffers is not supported!");
             return;
         }
-        this.extFLT = WebGraphics.enableWebGLExtension(gl, "OES_texture_float", true);
-        if (!this.extFLT) {
+        if (!WebGraphics.enableWebGLExtension(gl, "OES_texture_float", true)) {
             console.error("Float texture is not supported!");
             return;
         }
 
         // Create and initialize shader programs
         this.meshShader = new ArenaProgram(gl);
-        this.deferredProgram = new DeferredProgram(gl);
-        this.compositorProgram = new CompositorProgram(gl);
-        this.debugProgram = new DebugProgram(gl);
-        
-        this.programs = [ this.meshShader, this.deferredProgram, this.compositorProgram, this.debugProgram ];
+        this.deferredShader = new DeferredProgram(gl);
+        this.compositorShader = new CompositorProgram(gl);
+        this.debugShader = new DebugProgram(gl);
 
         // Check that every program compiled correctly
+        this.programs = [
+            this.meshShader,
+            this.deferredShader,
+            this.compositorShader,
+            this.debugShader,
+        ];
         this.isReady = this.programs.every(p => p.isValid);
 
+        // Create and initialize actors and objects
         this.outputQuad = new QuadActor(gl);
-
-        // Create the light for the scene
+        this.debugQuad = new DebugActor(gl);
         this.light = new Light(0, 1, -1, 25);
 
         // Initialize shadow rendering
         this.shadows = new RenderShadows(gl, 512);
         this.isReady = this.isReady && this.shadows.isReady;
 
-        // Initialize deferred shading
-        this.deferredGBuffer = new GBuffer(gl, this.extDB);
+        // Initialize deferred shading and gbuffers
+        this.deferredGBuffer = new GBuffer(gl, extDB);
         this.isReady = this.isReady && this.deferredGBuffer.isValid;
-
-        // Initialize debugging
-        this.debugQuad = new DebugActor(gl);
-        this.isReady = this.isReady && this.debugProgram.isValid;
 
         // Set initial rendering state
         if (this.isReady) {
@@ -98,15 +97,53 @@ export class Renderer {
         }
     }
 
-    // Draw with deferred shading
-    public drawDeferred(actors: Actor[], camera: Camera) {
+    // Draw the scene
+    public draw(actors: Actor[], camera: Camera) {
         let gl = this.gl;
-        let canvas = gl.canvas;
 
-        // Draw the shadow map
+        // Generate the shadow map
         this.shadows.drawToShadowTexture(actors, this.light);
 
-        let program = this.deferredProgram;
+        // Do the first deferred rendering step
+        this.drawDeferred(actors, camera);
+
+        // Composite the scene
+        this.composite(camera);
+    }
+
+    //--------------------------------------------------------------------------
+    // Private members
+    //--------------------------------------------------------------------------
+
+    private readonly gl: WebGLRenderingContext;
+    private readonly programs: Program[];
+
+    // Shaders
+    private readonly meshShader: Program;
+    private readonly debugShader: DebugProgram;
+    private readonly deferredShader: DeferredProgram;
+    private readonly compositorShader: CompositorProgram;
+
+    // Objects
+    private readonly light: Light;
+    private readonly viewToLightTransform = mat4.create();
+
+    // Subprocesses
+    private readonly shadows: RenderShadows;
+
+    // Helper actors
+    private readonly outputQuad: QuadActor;
+    private readonly debugQuad: DebugActor;
+
+    // GBuffers
+    private readonly deferredGBuffer: GBuffer;
+    private readonly postProcessGBuffer: GBuffer;
+
+    // Draw with deferred shading and populate the gbuffer
+    private drawDeferred(actors: Actor[], camera: Camera) {
+        let gl = this.gl;
+        let canvas = gl.canvas;
+        let program = this.deferredShader;
 
         // Set the active program
         gl.useProgram(program.glsl);
@@ -124,11 +161,16 @@ export class Renderer {
             actor.draw(gl, program);
         }
 
-        // Unbind framebuffer
+        // Reset state
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
 
-        // Setup compositor
-        program = this.compositorProgram;
+    // Process all of the textures into one image
+    private composite(camera: Camera) {
+        let gl = this.gl;
+        let canvas = gl.canvas;
+        let program = this.compositorShader;
+
         gl.useProgram(program.glsl);
 
         // Set uniforms
@@ -152,7 +194,7 @@ export class Renderer {
         gl.uniform1i(program.uniform["u_shadowMap"], 3);
         gl.bindTexture(gl.TEXTURE_2D, this.shadows.depthTexture);
 
-        // Draw the quad
+        // Draw the quad without depth testing
         gl.disable(gl.DEPTH_TEST);
         this.outputQuad.draw(gl, program);
         gl.enable(gl.DEPTH_TEST);
@@ -161,47 +203,20 @@ export class Renderer {
         gl.bindTexture(gl.TEXTURE_2D, null);
     }
 
-    //--------------------------------------------------------------------------
-    // Private members
-    //--------------------------------------------------------------------------
-
-    private readonly gl: WebGLRenderingContext;
-    private readonly meshShader: Program;
-    private readonly programs: Program[];
-
-    private readonly shadows: RenderShadows;
-    private readonly viewToLightTransform = mat4.create();
-
-    private readonly light: Light;
-
-    // Debugging
-    private readonly debugQuad: DebugActor;
-    private readonly debugProgram: DebugProgram;
-
-    // Deferred shading
-    private deferredProgram: DeferredProgram;
-    private readonly deferredGBuffer: GBuffer;
-
-    private compositorProgram: CompositorProgram;
-    private readonly outputQuad: QuadActor;
-
-    // Extensions
-    private readonly extDB: any;
-    private readonly extFLT: any;
-
+    // Draws the given texture in a small quad at the corner of the screen
     private drawTextureDebugger(texture: WebGLTexture) {
         let gl = this.gl;
         // Use the debugging shader
-        gl.useProgram(this.debugProgram.glsl);
+        gl.useProgram(this.debugShader.glsl);
 
         // Attach the texture to render
         gl.activeTexture(gl.TEXTURE0);
-        gl.uniform1i(this.debugProgram.uniform["u_textureMap"], 0);
+        gl.uniform1i(this.debugShader.uniform["u_textureMap"], 0);
         gl.bindTexture(gl.TEXTURE_2D, texture);
 
         // Disable depth testing and draw
         gl.disable(gl.DEPTH_TEST);
-        this.debugQuad.draw(gl, this.debugProgram);
+        this.debugQuad.draw(gl, this.debugShader);
 
         // Reset state
         gl.enable(gl.DEPTH_TEST);
