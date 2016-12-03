@@ -22,7 +22,6 @@ export class ShadowProgram extends Program {
         "precision mediump float;",
 
         "uniform mat4 u_projectView;",
-        "uniform mat4 u_project;",
         "uniform mat4 u_model;",
 
         "attribute vec4 a_pos;",

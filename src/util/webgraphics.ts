@@ -52,7 +52,10 @@ export class WebGraphics {
     }
 
     // Enables the given WebGL extension name
-    public static enableWebGLExtension(gl: WebGLRenderingContext, name: string) {
+    public static enableWebGLExtension(gl: WebGLRenderingContext, name: string, noPrefixes?: boolean) {
+        if (noPrefixes) {
+            return gl.getExtension(name);
+        }
         let prefixes = ["WEBGL_", "WEBKIT_WEBGL_", "MOZ_WEBGL_", "GL_EXT_", "EXT_"];
         let ext: any = null;
         for (let prefix of prefixes) {
@@ -63,6 +66,18 @@ export class WebGraphics {
             }
         }
         return null;
+    }
+
+    // Creates a texture with the given parameters
+    public static createTexture(gl: WebGLRenderingContext, width: number, height: number, format: number, type: number) {
+        let texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, format, width, height, 0, format, type, null);
+        return texture;
     }
 
     //--------------------------------------------------------------------------
