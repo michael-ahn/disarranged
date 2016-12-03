@@ -28,6 +28,9 @@ export class Light {
     // The combined Projection * View matrix
     public readonly projectViewTransform = mat4.create();
 
+    // Project view transform that normalizes into texcoords
+    public readonly biasedProjectViewTransform = mat4.create();
+
     public constructor(x: number, y: number, z: number, size: number) {
         vec3.set(this.position, x, y, z);
         vec3.normalize(this.position, this.position);
@@ -38,6 +41,10 @@ export class Light {
         mat4.ortho(this.projectTransform, -size, size, -size, size, end - distance, end);
 
         mat4.multiply(this.projectViewTransform, this.projectTransform, this.viewTransform);
+
+        // Set the bias matrix and compute product
+        mat4.set(this.biasMatrix, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);
+        mat4.multiply(this.biasedProjectViewTransform, this.biasMatrix, this.projectViewTransform);
     }
 
     //--------------------------------------------------------------------------
@@ -45,9 +52,11 @@ export class Light {
     //--------------------------------------------------------------------------
 
     // The view transformation matrix for this light
-    public readonly viewTransform = mat4.create();
+    private readonly viewTransform = mat4.create();
 
     // The projection matrix for this light
-    public readonly projectTransform = mat4.create();
+    private readonly projectTransform = mat4.create();
 
+    // The bias matrix to normalize into texcoords
+    private readonly biasMatrix = mat4.create();
 }

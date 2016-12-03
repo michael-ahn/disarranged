@@ -27,16 +27,11 @@ export class Camera {
     // The Projection * View matrix of the camera
     public readonly projectViewTransform = mat4.create();
 
-    // The inverse of the Projection * View matrix
+    // The inverse of the projection matrix
     public readonly invProjectTransform = mat4.create();
 
-    // The world to projected view transformation.
-    public readonly viewTransform = mat4.create();
-
+    // The inverse of the view matrix
     public readonly invViewTransform = mat4.create();
-
-    // The projection matrix
-    public readonly projectTransform = mat4.create();
 
     // The position of the camera in world space.
     public readonly eyePosition = vec3.create();
@@ -64,8 +59,8 @@ export class Camera {
     // and look position.
     public update() {
         mat4.lookAt(this.viewTransform, this.eyePosition, this.lookPosition, this.upDirection);
-        mat4.multiply(this.projectViewTransform, this.projectTransform, this.viewTransform);
         mat4.invert(this.invViewTransform, this.viewTransform);
+        mat4.multiply(this.projectViewTransform, this.projectTransform, this.viewTransform);
     }
 
     // Reconstructs the projection matrix for the camera.
@@ -86,4 +81,10 @@ export class Camera {
 
     // The orientation of the camera
     private readonly upDirection = vec3.create();
+
+    // The world to projected view transformation.
+    public readonly viewTransform = mat4.create();
+
+    // The projection matrix
+    public readonly projectTransform = mat4.create();
 }

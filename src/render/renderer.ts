@@ -136,7 +136,6 @@ export class Renderer {
         let canvas = gl.canvas;
 
         // Draw the shadow map
-        
         this.shadows.drawToShadowTexture(actors, this.light);
 
         let program = this.deferredProgram;
@@ -164,9 +163,10 @@ export class Renderer {
         program = this.compositorProgram;
         gl.useProgram(program.glsl);
 
+        // Set uniforms
+        mat4.multiply(this.viewToLightTransform, this.light.biasedProjectViewTransform, camera.invViewTransform);
         gl.uniformMatrix4fv(program.uniform["u_invProj"], false, camera.invProjectTransform);
-        gl.uniformMatrix4fv(program.uniform["u_invView"], false, camera.invViewTransform);
-        gl.uniformMatrix4fv(program.uniform["u_lightPV"], false, this.light.projectViewTransform);
+        gl.uniformMatrix4fv(program.uniform["u_viewToLight"], false, this.viewToLightTransform);
 
         // Set target textures
         gl.activeTexture(gl.TEXTURE0);
@@ -201,6 +201,7 @@ export class Renderer {
     private readonly programs: Program[];
 
     private readonly shadows: RenderShadows;
+    private readonly viewToLightTransform = mat4.create();
 
     private readonly light: Light;
 

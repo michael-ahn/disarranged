@@ -34,27 +34,23 @@ export class CompositorProgram extends Program {
         "precision mediump float;",
 
         "uniform mat4 u_invProj;",
-        "uniform mat4 u_invView;",
-        "uniform mat4 u_lightPV;",
+        "uniform mat4 u_viewToLight;",
 
         "uniform sampler2D u_colourTexture;",
         "uniform sampler2D u_normalTexture;",
         "uniform sampler2D u_depthTexture;",
         "uniform sampler2D u_shadowMap;",
 
-        "const mat4 c_depthBias = mat4(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 1.0);",
-
         "varying vec2 v_texCoord;",
 
         "void main(void) {",
             "vec4 colour = texture2D(u_colourTexture, v_texCoord);",
             "vec4 normal = texture2D(u_normalTexture, v_texCoord);",
-            "float depth = texture2D(u_depthTexture, v_texCoord).x;",
+            "float depth = texture2D(u_depthTexture, v_texCoord).r;",
 
+            // Calculate light-view-space position from depth
             "vec4 p = u_invProj * (vec4(v_texCoord, depth, 1.0) * 2.0 - 1.0);",
-            "vec3 view_pos = p.xyz / p.w;",
-            "vec3 world_pos = vec3(u_invView * vec4(view_pos, 1));",
-            "vec4 light_pos = c_depthBias * u_lightPV * vec4(world_pos, 1);",
+            "vec4 light_pos = u_viewToLight * (p / p.w);",
 
             // Calculate effect from shadow
             "vec3 shadow_depth = light_pos.xyz / light_pos.w;",
@@ -62,6 +58,7 @@ export class CompositorProgram extends Program {
             "shadow_depth.z = min(shadow_depth.z, 1.0) - 0.005;",
             "float shadowFactor = shadow < shadow_depth.z ? 0.4 : 1.0;",
 
+            // Affect the colour
             "colour.xyz *= shadowFactor;",
 
             "gl_FragColor = vec4(colour.xyz, 1);",
