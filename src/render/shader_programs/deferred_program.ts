@@ -27,6 +27,7 @@ export class DeferredProgram extends Program {
 
         "uniform mat4 u_projectView;",
         "uniform mat4 u_model;",
+        "uniform float u_uvScale;",
 
         "varying vec2 v_tex;",
         "varying vec3 v_norm;",
@@ -34,7 +35,7 @@ export class DeferredProgram extends Program {
         "void main(void) {",
             "vec4 world_pos = u_model * vec4(a_pos, 1.0);",
             "v_norm = a_norm;",
-            "v_tex = a_tex;",
+            "v_tex = u_uvScale * a_tex;",
             "gl_Position = u_projectView * world_pos;",
         "}"
     ].join("\n");

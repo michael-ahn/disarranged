@@ -27,7 +27,7 @@ export class QuadActor extends Actor {
     public readonly renderStyle = RenderStyle.Basic;
 
     public constructor(gl: WebGLRenderingContext) {
-        super(gl, QuadActor.vertexData, null);
+        super(gl, 1, QuadActor.vertexData, null);
     }
 
     public draw(gl: WebGLRenderingContext, program: Program) {

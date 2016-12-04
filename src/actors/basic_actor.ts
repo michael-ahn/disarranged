@@ -26,7 +26,7 @@ export class BasicActor extends Actor {
     public readonly renderStyle = RenderStyle.Basic;
 
     public constructor(gl: WebGLRenderingContext) {
-        super(gl, BasicActor.vertexData, BasicActor.elementData);
+        super(gl, 1, BasicActor.vertexData, BasicActor.elementData);
     }
 
     //--------------------------------------------------------------------------

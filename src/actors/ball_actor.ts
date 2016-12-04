@@ -26,7 +26,7 @@ export class BallActor extends Actor {
     public readonly renderStyle = RenderStyle.Arena;
 
     public constructor(gl: WebGLRenderingContext) {
-        super(gl, BallActor.vertexData, BallActor.elementData);
+        super(gl, 1, BallActor.vertexData, BallActor.elementData);
     }
 
     //--------------------------------------------------------------------------

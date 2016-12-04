@@ -27,7 +27,7 @@ export class DebugActor extends Actor {
     public readonly renderStyle = RenderStyle.Basic;
 
     public constructor(gl: WebGLRenderingContext) {
-        super(gl, DebugActor.vertexData, null);
+        super(gl, 1, DebugActor.vertexData, null);
     }
 
     public draw(gl: WebGLRenderingContext, program: Program) {

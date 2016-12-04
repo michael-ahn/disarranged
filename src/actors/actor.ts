@@ -37,6 +37,9 @@ export abstract class Actor {
 
         // Set model transform
         gl.uniformMatrix4fv(program.uniform["u_model"], false, this.modelTransform);
+        if ("u_uvScale" in program.uniform) {
+            gl.uniform1f(program.uniform["u_uvScale"], this.uvScale);
+        }
 
         // Configure attributes
         program.enableAttribute(gl, "a_pos", 3, 32, 0);
@@ -60,7 +63,13 @@ export abstract class Actor {
     // The number of elements
     protected readonly elementCount: number;
 
-    protected constructor(gl: WebGLRenderingContext, vboData: Float32Array, eboData: Uint16Array) {
+    // Scale factor of the UVs
+    protected readonly uvScale: number;
+
+    protected constructor(gl: WebGLRenderingContext, uvScale: number,
+                          vboData: Float32Array, eboData: Uint16Array) {
+        this.uvScale = uvScale;
+
         // Create the element buffer
         if (eboData) {
             this.ebo = gl.createBuffer();
