@@ -35,11 +35,18 @@ export abstract class Program {
     public readonly isValid: boolean;
 
     // Enables the given attribute for this program if it exists
-    public enableAttribute(gl: WebGLRenderingContext, name: string, size:number, stride: number, offset: number) {
+    public enableAttribute(gl: WebGLRenderingContext, name: string, size: number, stride: number, offset: number) {
         if (name in this.attribute) {
             gl.enableVertexAttribArray(this.attribute[name]);
             gl.vertexAttribPointer(this.attribute[name], size, gl.FLOAT, false, stride, offset);
         }
+    }
+
+    // Attaches the given texture to the given index slot
+    public attachTexture(gl: WebGLRenderingContext, samplerName: string, texture: WebGLTexture, index: number) {
+        gl.activeTexture(gl.TEXTURE0 + index);
+        gl.uniform1i(this.uniform[samplerName], index);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
     }
 
     //--------------------------------------------------------------------------

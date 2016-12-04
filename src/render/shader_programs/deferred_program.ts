@@ -56,7 +56,7 @@ export class DeferredProgram extends Program {
             "vec3 outColour = colour * ((0.8 * cosFactor) + 0.2);",
             "gl_FragData[0] = vec4(outColour, cosFactor);",
             "gl_FragData[1] = vec4(v_norm, 1);",
-            // "gl_FragData[2] = vec4(v_tex, 0, 1);",
+            "gl_FragData[2] = vec4(v_tex, 0, 1);",
         "}"
     ].join("\n");
 
