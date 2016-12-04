@@ -46,11 +46,11 @@ export class DeferredProgram extends Program {
 
         "void main(void) {",
             // Calculate the light
-            "float surfaceFactor = dot(normalize(v_norm), u_lightPos);",
+            "float cosFactor = max(dot(normalize(v_norm), u_lightPos), 0.0);",
             "vec3 colour = vec3(0, 1, 0.5);",
 
-            "vec3 outColour = colour * ((0.8 * surfaceFactor) + 0.2);",
-            "gl_FragData[0] = vec4(outColour, 1);",
+            "vec3 outColour = colour * ((0.8 * cosFactor) + 0.2);",
+            "gl_FragData[0] = vec4(outColour, cosFactor);",
             "gl_FragData[1] = vec4(v_norm, 1);",
         "}"
     ].join("\n");

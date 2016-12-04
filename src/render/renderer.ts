@@ -227,13 +227,16 @@ export class Renderer {
 
         gl.useProgram(shader.glsl);
 
+        // Set uniforms
+        gl.uniform2f(shader.uniform["u_invScreenDims"], 1.0 / canvas.clientWidth, 1.0 / canvas.clientHeight);
+
         // Set target textures from the post process step
         gl.activeTexture(gl.TEXTURE0);
         gl.uniform1i(shader.uniform["u_colourTexture"], 0);
         gl.bindTexture(gl.TEXTURE_2D, this.postProcessGBuffer.colourTexture);
-        // gl.activeTexture(gl.TEXTURE1);
-        // gl.uniform1i(shader.uniform["u_normalTexture"], 1);
-        // gl.bindTexture(gl.TEXTURE_2D, this.postProcessGBuffer.normalTexture);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.uniform1i(shader.uniform["u_normalTexture"], 1);
+        gl.bindTexture(gl.TEXTURE_2D, this.postProcessGBuffer.normalTexture);
 
         // Draw the quad without depth testing
         gl.disable(gl.DEPTH_TEST);

@@ -33,20 +33,24 @@ export class GBuffer {
     // Whether the G-buffer is constructed successfully
     public readonly isValid: boolean;
 
-    public constructor(gl: WebGLRenderingContext, extDB: any) {
+    public constructor(gl: WebGLRenderingContext, extDB: any, noNormals?: boolean) {
         let canvas = gl.canvas;
         let width = canvas.clientWidth, height = canvas.clientHeight;
 
         // Create textures
         this.colourTexture = WebGraphics.createTexture(gl, width, height, gl.RGBA, gl.FLOAT);
-        this.normalTexture = WebGraphics.createTexture(gl, width, height, gl.RGBA, gl.FLOAT);
+        if (!noNormals) {
+            this.normalTexture = WebGraphics.createTexture(gl, width, height, gl.RGBA, gl.FLOAT);
+        }
         this.depthTexture = WebGraphics.createTexture(gl, width, height, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT);
 
         // Create attachments
         this.framebuffer = gl.createFramebuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, extDB.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D, this.colourTexture, 0);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, extDB.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D, this.normalTexture, 0);
+        if (!noNormals) {
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, extDB.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D, this.normalTexture, 0);
+        }
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthTexture, 0);
 
         // Check validity
@@ -57,10 +61,11 @@ export class GBuffer {
         }
 
         // Bind render targets
-        extDB.drawBuffersWEBGL([
-            extDB.COLOR_ATTACHMENT0_WEBGL,
-            extDB.COLOR_ATTACHMENT1_WEBGL,
-        ]);
+        let attachments = [ extDB.COLOR_ATTACHMENT0_WEBGL, ];
+        if (!noNormals) {
+            attachments.push(extDB.COLOR_ATTACHMENT1_WEBGL);
+        }
+        extDB.drawBuffersWEBGL(attachments);
 
         // Reset state
         gl.bindTexture(gl.TEXTURE_2D, null);

@@ -59,16 +59,13 @@ export class PostProcessProgram extends Program {
             "shadow_depth.z = min(shadow_depth.z, 1.0) - 0.005;",
             "float s = shadow < shadow_depth.z ? 0.4 : 1.0;",
 
+            // Darken the colour by the shadow
+            "colour.xyz *= s;",
+
             "vec2 xy = v_texCoord;",
             "float dx = u_invScreenDims.x, dy = u_invScreenDims.y;",
 
-            "float wave1 = dx * sin(xy.x * 6.28 / (10.0 * dx));",
-            "float wave2 = dx * sin(xy.x * 6.28 / (20.0 * dx) + 10.0);",
-            "float wave3 = dx * sin(xy.x * 6.28 / (50.0 * dx) + 20.0);",
-            "xy.x = xy.x + 0.2 * wave1 + 2.0 * wave2 + 4.0 * wave3;",
-            "xy.y = xy.y + 0.3 * wave1 + 3.2 * wave2 + 3.7 * wave3;",
-
-            // Sobel operator to draw edges
+            // Sobel operator to find edges
             "vec3 nlb = texture2D(u_normalTexture, xy + vec2(-dx, -dy)).xyz;",
             "vec3 nb = texture2D(u_normalTexture, xy + vec2(0, -dy)).xyz;",
             "vec3 nrb = texture2D(u_normalTexture, xy + vec2(dx, -dy)).xyz;",
@@ -88,12 +85,9 @@ export class PostProcessProgram extends Program {
             "float g = sqrt(gx2 + gy2);",
             "g = 1.0 - 5.0 * g * float(g > 0.6);",
 
-            // Affect the colour
-            "vec3 c = colour.xyz;",
-            "c = c * s * g;",
-
-            "gl_FragData[0] = vec4(c, 1);",
-            "gl_FragData[1] = vec4(c, 1);",
+            // Write data
+            "gl_FragData[0] = colour;",
+            "gl_FragData[1] = vec4(g);",
         "}",
     ].join("\n");
 
