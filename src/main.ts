@@ -62,6 +62,10 @@ function onResourcesLoaded(success: boolean) {
     let loadscreen = document.getElementById("loadscreen");
     loadscreen.style.display = 'none';
 
+    if (!renderer.isReady) {
+        return;
+    }
+
     // Start the game loop
     gameTick();
 }

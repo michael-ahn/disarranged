@@ -25,7 +25,8 @@ export class ShadowProgram extends Program {
         "uniform mat4 u_model;",
 
         "attribute vec4 a_pos;",
-        "attribute vec4 a_norm;",
+        "attribute vec3 a_norm;",
+        "attribute vec2 a_tex;",
 
         "void main() {",
             "gl_Position = u_projectView * u_model * a_pos;",

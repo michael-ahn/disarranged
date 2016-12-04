@@ -61,6 +61,10 @@ export class Renderer {
             console.error("Draw buffers is not supported!");
             return;
         }
+        if (!WebGraphics.enableWebGLExtension(gl, "depth_texture")) {
+            console.error("Depth textures are not supported");
+            return;
+        }
         if (!WebGraphics.enableWebGLExtension(gl, "OES_texture_float", true)) {
             console.error("Float texture is not supported!");
             return;

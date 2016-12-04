@@ -39,10 +39,9 @@ export abstract class Actor {
         gl.uniformMatrix4fv(program.uniform["u_model"], false, this.modelTransform);
 
         // Configure attributes
-        gl.enableVertexAttribArray(program.attribute["a_pos"]);
-        gl.enableVertexAttribArray(program.attribute["a_norm"]);
-        gl.vertexAttribPointer(program.attribute["a_pos"], 3, gl.FLOAT, false, 24, 0);
-        gl.vertexAttribPointer(program.attribute["a_norm"], 3, gl.FLOAT, false, 24, 12);
+        program.enableAttribute(gl, "a_pos", 3, 32, 0);
+        program.enableAttribute(gl, "a_norm", 3, 32, 12);
+        program.enableAttribute(gl, "a_tex", 2, 32, 24);
 
         // Draw
         gl.drawElements(gl.TRIANGLES, this.elementCount, gl.UNSIGNED_SHORT, 0);

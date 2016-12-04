@@ -23,6 +23,7 @@ export class ArenaProgram extends Program {
 
         "attribute vec3 a_pos;",
         "attribute vec3 a_norm;",
+        "attribute vec3 a_tex;",
 
         "uniform mat4 u_projectView;",
         "uniform mat4 u_model;",

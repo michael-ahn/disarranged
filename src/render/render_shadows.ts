@@ -46,13 +46,6 @@ export class RenderShadows {
         this.gl = gl;
         let canvas = gl.canvas;
 
-        // We need the depth texture extension
-        if (!WebGraphics.enableWebGLExtension(gl, "depth_texture")) {
-            console.error("Depth textures are not supported");
-            this.isReady = false;
-            return;
-        }
-
         // Create the depth texture used as our shadow map
         this.depthTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);

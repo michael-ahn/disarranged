@@ -34,6 +34,14 @@ export abstract class Program {
     // Whether the glsl program is valid after construction
     public readonly isValid: boolean;
 
+    // Enables the given attribute for this program if it exists
+    public enableAttribute(gl: WebGLRenderingContext, name: string, size:number, stride: number, offset: number) {
+        if (name in this.attribute) {
+            gl.enableVertexAttribArray(this.attribute[name]);
+            gl.vertexAttribPointer(this.attribute[name], size, gl.FLOAT, false, stride, offset);
+        }
+    }
+
     //--------------------------------------------------------------------------
     // Protected members
     //--------------------------------------------------------------------------
