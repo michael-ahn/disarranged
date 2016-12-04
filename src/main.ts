@@ -19,6 +19,7 @@ import { Keyboard, KeyCode } from "./util/keyboard";
 import { Renderer } from "./render/renderer";
 import { Game } from "./game/game";
 import { Camera } from "./render/camera";
+import { TextureLoader } from "./util/textureloader";
 
 // For testing purposes
 var testTime = 0;
@@ -27,6 +28,7 @@ var renderer: Renderer;
 var keyboard: Keyboard;
 var game: Game;
 var camera: Camera;
+var textureLoader: TextureLoader;
 
 function init() {
     // Create and initialize the WebGL context
@@ -35,6 +37,10 @@ function init() {
         alert("Unable to initialize WebGL. Your browser may not support it.");
         return;
     }
+
+    // Create and start loading textures
+    textureLoader = new TextureLoader(gl);
+    textureLoader.loadImages((success: boolean) => onResourcesLoaded(success));
 
     // Create a renderer to draw the game graphics
     renderer = new Renderer(gl);
@@ -50,6 +56,11 @@ function init() {
 
     // Create a camera
     camera = new Camera(gl);
+}
+
+function onResourcesLoaded(success: boolean) {
+    let loadscreen = document.getElementById("loadscreen");
+    loadscreen.style.display = 'none';
 
     // Start the game loop
     gameTick();

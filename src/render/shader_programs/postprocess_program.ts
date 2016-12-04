@@ -56,7 +56,7 @@ export class PostProcessProgram extends Program {
             // Calculate effect from shadow
             "vec3 shadow_depth = light_pos.xyz / light_pos.w;",
             "float shadow = texture2D(u_shadowMap, shadow_depth.xy).r;",
-            "shadow_depth.z = min(shadow_depth.z, 1.0) - 0.005;",
+            "shadow_depth.z = min(shadow_depth.z, 1.0) - 0.002;",
             "float s = shadow < shadow_depth.z ? 0.4 : 1.0;",
 
             // Darken the colour by the shadow

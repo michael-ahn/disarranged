@@ -9,10 +9,11 @@ const buffer = require('vinyl-buffer');
 const paths = {
     allSrcTs: 'src/**/*.ts',
     staticFiles: ['src/*.html', 'src/*.css'],
-    destDir: 'docs'
+    destDir: 'docs',
+    imageDir: 'docs/img'
 };
 
-gulp.task('clean', () => del(paths.destDir + '/*'));
+gulp.task('clean', () => del([paths.destDir + '/*', "!" + paths.imageDir]));
 
 gulp.task('copy-html', () =>
     gulp.src(paths.staticFiles)
