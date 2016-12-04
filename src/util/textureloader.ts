@@ -14,6 +14,10 @@
 // limitations under the License.
 //
 
+export const enum ImageTexture {
+    Pencil = 0,
+}
+
 export class TextureLoader {
 
     //--------------------------------------------------------------------------
@@ -24,6 +28,7 @@ export class TextureLoader {
         this.gl = gl;
     }
 
+    // Begin loading all images
     public loadImages(callback: (success: boolean) => void) {
         // Set initial data
         this.loadCallback = callback;
@@ -36,6 +41,11 @@ export class TextureLoader {
         for (let name of this.imageNames) {
             this.loadImage(pathPrefix + name + fileSuffix);
         }
+    }
+
+    // Get the given image texture
+    public getTexture(texture: ImageTexture): WebGLTexture {
+        return this.textures[texture];
     }
 
     //--------------------------------------------------------------------------

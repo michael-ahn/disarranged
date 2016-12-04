@@ -28,29 +28,39 @@ export class GBuffer {
     // Components of the G-buffer
     public readonly colourTexture: WebGLTexture;
     public readonly normalTexture: WebGLTexture;
+    public readonly uvTexture: WebGLTexture;
     public readonly depthTexture: WebGLTexture;
 
     // Whether the G-buffer is constructed successfully
     public readonly isValid: boolean;
 
-    public constructor(gl: WebGLRenderingContext, extDB: any, noNormals?: boolean) {
+    public constructor(gl: WebGLRenderingContext, extDB: any, includeNormals: boolean, includeUV: boolean) {
         let canvas = gl.canvas;
         let width = canvas.clientWidth, height = canvas.clientHeight;
 
-        // Create textures
-        this.colourTexture = WebGraphics.createTexture(gl, width, height, gl.RGBA, gl.FLOAT);
-        if (!noNormals) {
-            this.normalTexture = WebGraphics.createTexture(gl, width, height, gl.RGBA, gl.FLOAT);
-        }
-        this.depthTexture = WebGraphics.createTexture(gl, width, height, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT);
+        // Potential attachments
+        let attachments: any = [
+            extDB.COLOR_ATTACHMENT0_WEBGL,
+            extDB.COLOR_ATTACHMENT1_WEBGL,
+            extDB.COLOR_ATTACHMENT2_WEBGL,
+        ];
+        let usedAttachments: any = [];
 
-        // Create attachments
+        // Create framebuffer to contain the G-buffer
         this.framebuffer = gl.createFramebuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, extDB.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D, this.colourTexture, 0);
-        if (!noNormals) {
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, extDB.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D, this.normalTexture, 0);
+
+        // Create and attach textures to the frame buffer
+        this.colourTexture = this.addNewTexture(gl, width, height, attachments, usedAttachments);
+        if (includeNormals) {
+            this.normalTexture = this.addNewTexture(gl, width, height, attachments, usedAttachments);
         }
+        if (includeUV) {
+            this.uvTexture = this.addNewTexture(gl, width, height, attachments, usedAttachments);
+        }
+
+        // Add the depth component to the framebuffer
+        this.depthTexture = WebGraphics.createTexture(gl, width, height, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthTexture, 0);
 
         // Check validity
@@ -60,18 +70,22 @@ export class GBuffer {
             return;
         }
 
-        // Bind render targets
-        let attachments = [ extDB.COLOR_ATTACHMENT0_WEBGL, ];
-        if (!noNormals) {
-            attachments.push(extDB.COLOR_ATTACHMENT1_WEBGL);
-        }
-        extDB.drawBuffersWEBGL(attachments);
+        // Assign the gl_FragData indices for this framebuffer
+        extDB.drawBuffersWEBGL(usedAttachments);
 
         // Reset state
         gl.bindTexture(gl.TEXTURE_2D, null);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
         this.isValid = true;
+    }
+
+    private addNewTexture(gl: WebGLRenderingContext, width: number, height: number, attachments: any[], usedAttachments: any[]) {
+        let texture = WebGraphics.createTexture(gl, width, height, gl.RGBA, gl.FLOAT);
+        let attachment = attachments.shift();
+        usedAttachments.push(attachment);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, attachment, gl.TEXTURE_2D, texture, 0);
+        return texture;
     }
 
 }

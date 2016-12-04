@@ -43,7 +43,7 @@ function init() {
     textureLoader.loadImages((success: boolean) => onResourcesLoaded(success));
 
     // Create a renderer to draw the game graphics
-    renderer = new Renderer(gl);
+    renderer = new Renderer(gl, textureLoader);
     if (!renderer.isReady) {
         return;
     }

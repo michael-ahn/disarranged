@@ -33,6 +33,7 @@ import { QuadActor } from "../actors/quad_actor";
 import { DebugActor } from "../actors/debug_actor";
 
 import { WebGraphics } from "../util/webgraphics";
+import { TextureLoader } from "../util/textureloader";
 import { mat4, vec3 } from "../lib/gl-matrix";
 
 // The type of shaders available for rendering with
@@ -50,8 +51,9 @@ export class Renderer {
     // Is true if the renderer successfully initialized actors and programs
     public readonly isReady: boolean = false;
 
-    public constructor(gl: WebGLRenderingContext) {
+    public constructor(gl: WebGLRenderingContext, resources: TextureLoader) {
         this.gl = gl;
+        this.res = resources;
 
         // Get necessary extensions
         let extDB = WebGraphics.enableWebGLExtension(gl, "draw_buffers");
@@ -91,8 +93,8 @@ export class Renderer {
         this.isReady = this.isReady && this.shadows.isReady;
 
         // Initialize deferred shading and gbuffers
-        this.deferredGBuffer = new GBuffer(gl, extDB);
-        this.postProcessGBuffer = new GBuffer(gl, extDB);
+        this.deferredGBuffer = new GBuffer(gl, extDB, true, false);
+        this.postProcessGBuffer = new GBuffer(gl, extDB, true, false);
         this.isReady = this.isReady &&
                        this.deferredGBuffer.isValid &&
                        this.postProcessGBuffer.isValid;
@@ -129,6 +131,7 @@ export class Renderer {
     //--------------------------------------------------------------------------
 
     private readonly gl: WebGLRenderingContext;
+    private readonly res: TextureLoader;
     private readonly programs: Program[];
 
     // Shaders
