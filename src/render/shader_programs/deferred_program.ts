@@ -50,11 +50,10 @@ export class DeferredProgram extends Program {
 
         "void main(void) {",
             // Calculate the light
-            "float cosFactor = max(dot(normalize(v_norm), u_lightPos), 0.0);",
-            "vec3 colour = vec3(0.0 + v_tex.x* 0.005, 1, 0.5);",
+            "float cosFactor = clamp(dot(normalize(v_norm), u_lightPos), 0.0, 1.0);",
+            "vec3 colour = vec3(1.0);",
 
-            "vec3 outColour = colour * ((0.8 * cosFactor) + 0.2);",
-            "gl_FragData[0] = vec4(outColour, cosFactor);",
+            "gl_FragData[0] = vec4(colour, cosFactor);",
             "gl_FragData[1] = vec4(v_norm, 1);",
             "gl_FragData[2] = vec4(v_tex, 0, 1);",
         "}"

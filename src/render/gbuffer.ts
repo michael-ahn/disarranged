@@ -34,7 +34,10 @@ export class GBuffer {
     // Whether the G-buffer is constructed successfully
     public readonly isValid: boolean;
 
-    public constructor(gl: WebGLRenderingContext, extDB: any, includeNormals: boolean, includeUV: boolean) {
+    public constructor(gl: WebGLRenderingContext, extDB: any, includeColour: boolean, includeNormals: boolean, includeUV: boolean) {
+        if (!includeColour && !includeNormals && !includeUV) {
+            return;
+        }
         let canvas = gl.canvas;
         let width = canvas.clientWidth, height = canvas.clientHeight;
 
@@ -51,7 +54,9 @@ export class GBuffer {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
 
         // Create and attach textures to the frame buffer
-        this.colourTexture = this.addNewTexture(gl, width, height, attachments, usedAttachments);
+        if (includeColour) {
+            this.colourTexture = this.addNewTexture(gl, width, height, attachments, usedAttachments);
+        }
         if (includeNormals) {
             this.normalTexture = this.addNewTexture(gl, width, height, attachments, usedAttachments);
         }

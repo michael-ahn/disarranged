@@ -33,7 +33,7 @@ import { QuadActor } from "../actors/quad_actor";
 import { DebugActor } from "../actors/debug_actor";
 
 import { WebGraphics } from "../util/webgraphics";
-import { TextureLoader } from "../util/textureloader";
+import { TextureLoader, ImageTexture } from "../util/textureloader";
 import { mat4, vec3 } from "../lib/gl-matrix";
 
 // The type of shaders available for rendering with
@@ -97,8 +97,8 @@ export class Renderer {
         this.isReady = this.isReady && this.shadows.isReady;
 
         // Initialize deferred shading and gbuffers
-        this.deferredGBuffer = new GBuffer(gl, extDB, true, true);
-        this.postProcessGBuffer = new GBuffer(gl, extDB, true, false);
+        this.deferredGBuffer = new GBuffer(gl, extDB, true, true, true);
+        this.postProcessGBuffer = new GBuffer(gl, extDB, false, true, false);
         this.isReady = this.isReady &&
                        this.deferredGBuffer.isValid &&
                        this.postProcessGBuffer.isValid;
@@ -202,10 +202,9 @@ export class Renderer {
         gl.uniform2f(shader.uniform["u_invScreenDims"], 1.0 / canvas.clientWidth, 1.0 / canvas.clientHeight);
 
         // Set target textures from the deferred rendering step
-        shader.attachTexture(gl, "u_colourTexture", this.deferredGBuffer.colourTexture, 0);
-        shader.attachTexture(gl, "u_normalTexture", this.deferredGBuffer.normalTexture, 1);
-        shader.attachTexture(gl, "u_depthTexture", this.deferredGBuffer.depthTexture, 2);
-        shader.attachTexture(gl, "u_shadowMap", this.shadows.depthTexture, 3);
+        shader.attachTexture(gl, "u_normalTexture", this.deferredGBuffer.normalTexture, 0);
+        shader.attachTexture(gl, "u_depthTexture", this.deferredGBuffer.depthTexture, 1);
+        shader.attachTexture(gl, "u_shadowMap", this.shadows.depthTexture, 2);
 
          // Draw the quad without depth testing
         gl.disable(gl.DEPTH_TEST);
@@ -229,9 +228,10 @@ export class Renderer {
         gl.uniform2f(shader.uniform["u_invScreenDims"], 1.0 / canvas.clientWidth, 1.0 / canvas.clientHeight);
 
         // Set target textures from the post process step
-        shader.attachTexture(gl, "u_colourTexture", this.postProcessGBuffer.colourTexture, 0);
+        shader.attachTexture(gl, "u_colourTexture", this.deferredGBuffer.colourTexture, 0);
         shader.attachTexture(gl, "u_normalTexture", this.postProcessGBuffer.normalTexture, 1);
         shader.attachTexture(gl, "u_uvTexture", this.deferredGBuffer.uvTexture, 2);
+        shader.attachTexture(gl, "u_imgPencil", this.res.getTexture(ImageTexture.Pencil), 3);
 
         // Draw the quad without depth testing
         gl.disable(gl.DEPTH_TEST);

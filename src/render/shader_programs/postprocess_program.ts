@@ -38,7 +38,6 @@ export class PostProcessProgram extends Program {
         "uniform mat4 u_viewToLight;",
         "uniform vec2 u_invScreenDims;",
 
-        "uniform sampler2D u_colourTexture;",
         "uniform sampler2D u_normalTexture;",
         "uniform sampler2D u_depthTexture;",
         "uniform sampler2D u_shadowMap;",
@@ -46,21 +45,17 @@ export class PostProcessProgram extends Program {
         "varying vec2 v_texCoord;",
 
         "void main(void) {",
-            "vec4 colour = texture2D(u_colourTexture, v_texCoord);",
             "float depth = texture2D(u_depthTexture, v_texCoord).r;",
 
             // Calculate light-view-space position from depth
-            "vec4 p = u_invProj * (vec4(v_texCoord, depth, 1.0) * 2.0 - 1.0);",
-            "vec4 light_pos = u_viewToLight * (p / p.w);",
+            "vec4 view_pos = u_invProj * (vec4(v_texCoord, depth, 1.0) * 2.0 - 1.0);",
+            "vec4 light_pos = u_viewToLight * (view_pos / view_pos.w);",
 
             // Calculate effect from shadow
             "vec3 shadow_depth = light_pos.xyz / light_pos.w;",
             "float shadow = texture2D(u_shadowMap, shadow_depth.xy).r;",
             "shadow_depth.z = min(shadow_depth.z, 1.0) - 0.002;",
-            "float s = shadow < shadow_depth.z ? 0.4 : 1.0;",
-
-            // Darken the colour by the shadow
-            "colour.xyz *= s;",
+            "float s = shadow < shadow_depth.z ? 0.25 : 1.0;",
 
             "vec2 xy = v_texCoord;",
             "float dx = u_invScreenDims.x, dy = u_invScreenDims.y;",
@@ -85,9 +80,11 @@ export class PostProcessProgram extends Program {
             "float g = sqrt(gx2 + gy2);",
             "g = 1.0 - 5.0 * g * float(g > 0.6);",
 
+            // Pack data: Edge, shadow, depth
+            "vec4 data = vec4(g, s, depth, 1);",
+
             // Write data
-            "gl_FragData[0] = colour;",
-            "gl_FragData[1] = vec4(g);",
+            "gl_FragData[0] = data;",
         "}",
     ].join("\n");
 

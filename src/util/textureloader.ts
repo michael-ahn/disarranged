@@ -55,7 +55,7 @@ export class TextureLoader {
     private readonly gl: WebGLRenderingContext;
 
     private readonly imageNames = [
-        "pencillight"
+        "pencil"
     ];
 
     private images: HTMLImageElement[];
