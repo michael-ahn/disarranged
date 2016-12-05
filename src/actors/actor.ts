@@ -29,6 +29,11 @@ export abstract class Actor {
 
     // The world-to-model transform for the vertex data
     public readonly modelTransform = mat4.create();
+    public readonly invModelTransform = mat4.create();
+
+    // Additional tranformations matrices for movement
+    public readonly staticTransform = mat4.create();
+    public readonly dynamicTransform = mat4.create();
 
     // Draws the actor for the given WebGL context
     public draw(gl: WebGLRenderingContext, program: Program) {
@@ -37,8 +42,14 @@ export abstract class Actor {
 
         // Set model transform
         gl.uniformMatrix4fv(program.uniform["u_model"], false, this.modelTransform);
+        if ("u_transInvModel" in program.uniform) {
+            gl.uniformMatrix4fv(program.uniform["u_transInvModel"], false, this.invModelTransform);
+        }
         if ("u_uvScale" in program.uniform) {
             gl.uniform1f(program.uniform["u_uvScale"], this.uvScale);
+        }
+        if ("u_edgeFactor" in program.uniform) {
+            gl.uniform1f(program.uniform["u_edgeFactor"], this.edgeFactor);
         }
 
         // Configure attributes
@@ -64,12 +75,12 @@ export abstract class Actor {
     protected readonly elementCount: number;
 
     // Scale factor of the UVs
-    protected readonly uvScale: number;
+    protected uvScale: number = 1.0;
 
-    protected constructor(gl: WebGLRenderingContext, uvScale: number,
-                          vboData: Float32Array, eboData: Uint16Array) {
-        this.uvScale = uvScale;
+    // Edge sensitivity
+    protected edgeFactor: number = 1.0;
 
+    protected constructor(gl: WebGLRenderingContext, vboData: Float32Array, eboData: Uint16Array) {
         // Create the element buffer
         if (eboData) {
             this.ebo = gl.createBuffer();

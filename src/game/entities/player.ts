@@ -18,6 +18,7 @@ import { Entity } from "./entity";
 import { vec3, mat4 } from "../../lib/gl-matrix";
 import { Actor } from "../../actors/actor";
 import { ArenaActor } from "../../actors/arena_actor";
+import { CharacterActor } from "../../actors/character_actor";
 
 export class Player extends Entity {
 
@@ -29,8 +30,9 @@ export class Player extends Entity {
     public readonly forwardBasis = vec3.create();
     public readonly sideBasis = vec3.create();
 
-    public constructor(actor: Actor, ground: ArenaActor) {
+    public constructor(actor: CharacterActor, ground: ArenaActor) {
         super(actor);
+        this.character = actor;
         this.speed = 0.5;
         this.ground = ground;
     }
@@ -63,7 +65,7 @@ export class Player extends Entity {
     }
 
     // Move the player one step
-    public move() {
+    public tick() {
         // Dampen lateral movement in the air
         if (this.isAirborne) {
             this.direction[0] *= 0.5;
@@ -86,9 +88,6 @@ export class Player extends Entity {
         // Sample the ground height at our current location
         let floor = this.ground.sampleHeight(this.position[0], this.position[2]);
 
-        // Raise the standing height by our distance to the origin of the model
-        floor += 0.9;
-
         // Ground the player if they're jumping and hit the ground
         if (this.isAirborne) {
             // Apply gravity to the player
@@ -106,12 +105,15 @@ export class Player extends Entity {
         }
     
         // Move the actor to the final position
-        mat4.fromTranslation(this.actor.modelTransform, this.position);
+        this.character.tick(this.position, this.forwardBasis, this.direction[2], this.direction[0]);
     }
 
     //--------------------------------------------------------------------------
     // Private members
     //--------------------------------------------------------------------------
+
+    // The character model
+    private readonly character: CharacterActor;
 
     // The ground object to collide with
     private readonly ground: ArenaActor;

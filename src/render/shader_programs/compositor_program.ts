@@ -56,7 +56,8 @@ export class CompositorProgram extends Program {
             "float cosFactor = colour.w;",
 
             // Get pencil tone data from pencil texture
-            "vec2 uv = texture2D(u_uvTexture, v_texCoord).xy;",
+            "vec4 uvData = texture2D(u_uvTexture, v_texCoord);",
+            "vec2 uv = uvData.xy;",
             "vec4 tones = texture2D(u_imgPencil, uv) - 1.0;",
 
             // Get data from normal texture
@@ -76,7 +77,9 @@ export class CompositorProgram extends Program {
             "vec2 sample3 = texture2D(u_normalTexture, xy).xy;",
 
             // Calculate the weighted edge contribution
-            "float edgeFactor = 0.2 * sample1.x + 0.35 * sample2.x + 0.45 * sample3.x - 1.0;",
+            "float edgeFactor = 0.2 * sample1.x + 0.35 * sample2.x + 0.45 * sample3.x;",
+            "float edgeBias = uvData.z;",
+            "edgeFactor = -8.0 * edgeFactor * float(edgeFactor > edgeBias);",
 
             // Calculate the weighted shadow contribution
             "float shadowFactor = 0.4 * data.y + 0.2 * sample1.y + 0.2 * sample2.y + 0.2 * sample3.y;",

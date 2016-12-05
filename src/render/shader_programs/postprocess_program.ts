@@ -78,7 +78,6 @@ export class PostProcessProgram extends Program {
             "float gx2 = dot(gx, gx);",
             "float gy2 = dot(gy, gy);",
             "float g = sqrt(gx2 + gy2);",
-            "g = 1.0 - 5.0 * g * float(g > 0.6);",
 
             // Pack data: Edge, shadow, depth
             "vec4 data = vec4(g, s, depth, 1);",

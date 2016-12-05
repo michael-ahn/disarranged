@@ -23,6 +23,7 @@ import { Actor } from "../actors/actor";
 import { ArenaActor } from "../actors/arena_actor";
 import { BasicActor } from "../actors/basic_actor";
 import { BallActor } from "../actors/ball_actor";
+import { CharacterActor } from "../actors/character_actor";
 
 export class Game {
 
@@ -43,7 +44,7 @@ export class Game {
         this.gl = gl;
 
         let arenaActor = new ArenaActor(this.gl);
-        let playerActor = new BallActor(this.gl);
+        let playerActor = new CharacterActor(this.gl);
         let enemyActor = new BallActor(this.gl);
         
         this.player = new Player(playerActor, arenaActor);
@@ -65,7 +66,7 @@ export class Game {
         let verticalInput = input.isKeyDown(KeyCode.UP) ? 1 : (input.isKeyDown(KeyCode.DOWN) ? -1 : 0);
         let horizontalInput = input.isKeyDown(KeyCode.LEFT) ? 1 : (input.isKeyDown(KeyCode.RIGHT) ? -1 : 0);
         this.player.setDirection(verticalInput, horizontalInput);
-        this.player.move();
+        this.player.tick();
 
     }
 

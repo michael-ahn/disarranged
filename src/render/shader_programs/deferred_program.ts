@@ -27,6 +27,7 @@ export class DeferredProgram extends Program {
 
         "uniform mat4 u_projectView;",
         "uniform mat4 u_model;",
+        "uniform mat4 u_transInvModel;",
         "uniform float u_uvScale;",
 
         "varying vec2 v_tex;",
@@ -34,8 +35,9 @@ export class DeferredProgram extends Program {
 
         "void main(void) {",
             "vec4 world_pos = u_model * vec4(a_pos, 1.0);",
-            "v_norm = a_norm;",
+            "vec4 norm = u_transInvModel * vec4(a_norm, 1.0);",
             "v_tex = u_uvScale * a_tex;",
+            "v_norm = norm.xyz;",
             "gl_Position = u_projectView * world_pos;",
         "}"
     ].join("\n");
@@ -45,6 +47,7 @@ export class DeferredProgram extends Program {
         "precision mediump float;",
 
         "uniform vec3 u_lightPos;",
+        "uniform float u_edgeFactor;",
 
         "varying vec2 v_tex;",
         "varying vec3 v_norm;",
@@ -56,7 +59,7 @@ export class DeferredProgram extends Program {
 
             "gl_FragData[0] = vec4(colour, cosFactor);",
             "gl_FragData[1] = vec4(v_norm, 1);",
-            "gl_FragData[2] = vec4(v_tex, 0, 1);",
+            "gl_FragData[2] = vec4(v_tex, u_edgeFactor, 1);",
         "}"
     ].join("\n");
 

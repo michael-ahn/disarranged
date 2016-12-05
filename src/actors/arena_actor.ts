@@ -26,7 +26,8 @@ export class ArenaActor extends Actor {
     public readonly renderStyle = RenderStyle.Arena;
 
     public constructor(gl: WebGLRenderingContext) {
-        super(gl, 8, ArenaActor.vertexData, ArenaActor.elementData);
+        super(gl, ArenaActor.vertexData, ArenaActor.elementData);
+        this.uvScale = 8.0;
     }
 
     // Calculates the interpolated height at the given coordinates

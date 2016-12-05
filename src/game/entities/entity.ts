@@ -33,6 +33,6 @@ export abstract class Entity {
     }
 
     // Moves the entity one step
-    public abstract move(): void;
+    public abstract tick(): void;
 
 }

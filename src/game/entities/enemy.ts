@@ -29,6 +29,6 @@ export class Enemy extends Entity {
         super(actor);
     }
 
-    public move() {}
+    public tick() {}
 
 }
