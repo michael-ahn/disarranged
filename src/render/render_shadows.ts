@@ -73,13 +73,18 @@ export class RenderShadows {
         this.isReady = this.program.isValid;
     }
 
-    public drawToShadowTexture(actors: Actor[], light: Light) {
+    public drawToShadowTexture(actors: Actor[], light: Light, disable: boolean) {
         let gl = this.gl;
         let canvas = gl.canvas;
 
         // Render to the shadow's framebuffer
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
         gl.clear(gl.DEPTH_BUFFER_BIT);
+
+        if (disable) {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            return;
+        }
 
         // Use the shadow shader
         gl.useProgram(this.program.glsl);

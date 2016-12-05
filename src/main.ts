@@ -75,8 +75,11 @@ function onResourcesLoaded(success: boolean) {
     loadscreen.style.display = 'none';
 
     if (renderer.isReady && textureLoader.isReady && audioLoader.isReady) {
-        // Start the game loop
+        // Hook up toggle for music
+        keyboard.registerEvent(KeyCode.M, () => audioLoader.toggleSound(AudioFile.Ballade));
         audioLoader.playSound(AudioFile.Ballade);
+
+        // Start the game loop
         gameTick();
     }
 }
@@ -93,7 +96,9 @@ function gameTick() {
 
     camera.follow(game.player, game.enemy, game.ground);
 
-    renderer.draw(game.actors, camera);
+    let disableShadows = keyboard.isKeyDown(KeyCode.S);
+
+    renderer.draw(game.actors, camera, disableShadows);
 }
 
 init();

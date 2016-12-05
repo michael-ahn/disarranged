@@ -118,11 +118,11 @@ export class Renderer {
     }
 
     // Draw the scene
-    public draw(actors: Actor[], camera: Camera) {
+    public draw(actors: Actor[], camera: Camera, disableShadows: boolean) {
         let gl = this.gl;
 
         // Generate the shadow map
-        this.shadows.drawToShadowTexture(actors, this.light);
+        this.shadows.drawToShadowTexture(actors, this.light, disableShadows);
 
         // Do the first deferred rendering step
         this.drawDeferred(actors, camera);

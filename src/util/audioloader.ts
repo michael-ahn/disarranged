@@ -50,10 +50,36 @@ export class AudioLoader {
 
     // Starts playing the given sound
     public playSound(audio: AudioFile) {
-        let source = this.bufferSources[audio];
+        if (this.bufferSources[audio] !== null) {
+            return;
+        }
+        let source = this.ctx.createBufferSource();
+        this.bufferSources[audio] = source;
+        source.buffer = this.sounds[audio];
+
         source.connect(this.ctx.destination);
         source.loop = true;
-        source.start(0);
+        source.start();
+    }
+
+    // Stops playing the given sound
+    public stopSound(audio: AudioFile) {
+        if (this.bufferSources[audio] === null) {
+            return;
+        }
+        let source = this.bufferSources[audio];
+        source.stop();
+        source.disconnect(this.ctx.destination);
+        this.bufferSources[audio] = null;
+    }
+
+    // Toggles the play/stop state of the sound
+    public toggleSound(audio: AudioFile) {
+        if (this.bufferSources[audio]) {
+            this.stopSound(audio);
+        } else {
+            this.playSound(audio);
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -67,8 +93,8 @@ export class AudioLoader {
         "ballade"
     ];
 
-    private sounds: AudioBuffer[];
-    private bufferSources: AudioBufferSourceNode[];
+    private sounds: AudioBuffer[] = [];
+    private bufferSources: AudioBufferSourceNode[] = [];
     private loadCallback: (success: boolean) => void = null;
     private remainingSounds: number;
 
@@ -79,7 +105,7 @@ export class AudioLoader {
         // Put null audio buffer in array until it is loaded
         let index = this.sounds.length;
         this.sounds.push(null);
-        this.bufferSources.push(this.ctx.createBufferSource());
+        this.bufferSources.push(null);
 
         // Decode on load
         request.onload = () => this.ctx.decodeAudioData(request.response,
@@ -90,7 +116,6 @@ export class AudioLoader {
 
     private onSoundSuccess(sound: AudioBuffer, index: number) {
         this.sounds[index] = sound;
-        this.bufferSources[index].buffer = sound;
 
         this.remainingSounds--;
         if (this.remainingSounds <= 0 && this.loadCallback) {
