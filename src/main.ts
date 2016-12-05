@@ -20,6 +20,7 @@ import { Renderer } from "./render/renderer";
 import { Game } from "./game/game";
 import { Camera } from "./render/camera";
 import { TextureLoader } from "./util/textureloader";
+import { AudioLoader, AudioFile } from "./util/audioloader";
 
 // For testing purposes
 var testTime = 0;
@@ -29,6 +30,7 @@ var keyboard: Keyboard;
 var game: Game;
 var camera: Camera;
 var textureLoader: TextureLoader;
+var audioLoader: AudioLoader;
 
 function init() {
     // Create and initialize the WebGL context
@@ -41,6 +43,10 @@ function init() {
     // Create and start loading textures
     textureLoader = new TextureLoader(gl);
     textureLoader.loadImages((success: boolean) => onResourcesLoaded(success));
+
+    // Load audio
+    audioLoader = new AudioLoader();
+    audioLoader.loadSounds((success: boolean) => onResourcesLoaded(success));
 
     // Create a renderer to draw the game graphics
     renderer = new Renderer(gl, textureLoader);
@@ -60,15 +66,19 @@ function init() {
 }
 
 function onResourcesLoaded(success: boolean) {
-    let loadscreen = document.getElementById("loadscreen");
-    loadscreen.style.display = 'none';
-
-    if (!renderer.isReady) {
+    if (!success) {
+        alert('Could not load resources');
         return;
     }
 
-    // Start the game loop
-    gameTick();
+    let loadscreen = document.getElementById("loadscreen");
+    loadscreen.style.display = 'none';
+
+    if (renderer.isReady && textureLoader.isReady && audioLoader.isReady) {
+        // Start the game loop
+        audioLoader.playSound(AudioFile.Ballade);
+        gameTick();
+    }
 }
 
 function gameTick() {

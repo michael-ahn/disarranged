@@ -57,8 +57,8 @@ export class Renderer {
         this.res = resources;
 
         // Get necessary extensions
-        let extDB = WebGraphics.enableWebGLExtension(gl, "draw_buffers");
-        if (!extDB) {
+        this.extDB = WebGraphics.enableWebGLExtension(gl, "draw_buffers");
+        if (!this.extDB) {
             console.error("Draw buffers is not supported!");
             return;
         }
@@ -101,8 +101,8 @@ export class Renderer {
         this.isReady = this.isReady && this.shadows.isReady;
 
         // Initialize deferred shading and gbuffers
-        this.deferredGBuffer = new GBuffer(gl, extDB, true, true, true);
-        this.postProcessGBuffer = new GBuffer(gl, extDB, false, true, false);
+        this.deferredGBuffer = new GBuffer(gl, this.extDB, true, true, true);
+        this.postProcessGBuffer = new GBuffer(gl, this.extDB, false, true, false);
         this.isReady = this.isReady &&
                        this.deferredGBuffer.isValid &&
                        this.postProcessGBuffer.isValid;
@@ -152,6 +152,7 @@ export class Renderer {
     // Objects
     private readonly light: Light;
     private readonly viewToLightTransform = mat4.create();
+    private readonly extDB: any;
 
     // Subprocesses
     private readonly shadows: RenderShadows;

@@ -28,6 +28,10 @@ export class TextureLoader {
         this.gl = gl;
     }
 
+    public get isReady() {
+        return this.ready;
+    }
+
     // Begin loading all images
     public loadImages(callback: (success: boolean) => void) {
         // Set initial data
@@ -35,6 +39,7 @@ export class TextureLoader {
         this.textures = [];
         this.images = [];
         this.remainingImages = this.imageNames.length;
+        this.ready = false;
 
         // Load each file
         let pathPrefix = "img/", fileSuffix = ".png";
@@ -53,6 +58,7 @@ export class TextureLoader {
     //--------------------------------------------------------------------------
 
     private readonly gl: WebGLRenderingContext;
+    private ready = false;
 
     private readonly imageNames = [
         "pencil"
@@ -86,6 +92,7 @@ export class TextureLoader {
 
         this.remainingImages--;
         if (this.remainingImages <= 0 && this.loadCallback) {
+            this.ready = true;
             let callback = this.loadCallback;
             this.loadCallback = null;
             callback(true);

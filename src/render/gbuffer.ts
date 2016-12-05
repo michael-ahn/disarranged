@@ -85,6 +85,20 @@ export class GBuffer {
         this.isValid = true;
     }
 
+    public destroy(gl: WebGLRenderingContext) {
+        gl.deleteFramebuffer(this.framebuffer);
+        if (this.colourTexture) {
+            gl.deleteTexture(this.colourTexture);
+        }
+        if (this.normalTexture) {
+            gl.deleteTexture(this.normalTexture);
+        }
+        if (this.uvTexture) {
+            gl.deleteTexture(this.uvTexture);
+        }
+        gl.deleteTexture(this.depthTexture);
+    }
+
     private addNewTexture(gl: WebGLRenderingContext, width: number, height: number, attachments: any[], usedAttachments: any[]) {
         let texture = WebGraphics.createTexture(gl, width, height, gl.RGBA, gl.FLOAT);
         let attachment = attachments.shift();

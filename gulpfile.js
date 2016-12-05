@@ -10,10 +10,10 @@ const paths = {
     allSrcTs: 'src/**/*.ts',
     staticFiles: ['src/*.html', 'src/*.css'],
     destDir: 'docs',
-    imageDir: 'docs/img'
+    destFiles: ['docs/*.js', 'docs/*.html', 'docs/*.css']
 };
 
-gulp.task('clean', () => del([paths.destDir + '/*', "!" + paths.imageDir]));
+gulp.task('clean', () => del(paths.destFiles));
 
 gulp.task('copy-html', () =>
     gulp.src(paths.staticFiles)
