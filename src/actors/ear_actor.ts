@@ -41,11 +41,11 @@ export class EarActor extends Actor {
         mat4.scale(this.staticTransform, this.staticTransform, [0.3, 0.3, 0.3]);
     }
 
-    public tick(time: number, parentModel: mat4, scratch: mat4) {
+    public tick(time: number, parentModel: mat4, scratch: mat4, flipFreq: number) {
         let pi = 3.14159265;
 
         // Calculate rotation
-        let rotationOffset = Math.sin(time * 6.28) * pi / 12 - pi / 6;
+        let rotationOffset = Math.sin(time * 6.28 * flipFreq) * pi / 12 - pi / 6;
         mat4.fromTranslation(this.dynamicTransform, this.negEarOffset);
         mat4.rotateZ(this.dynamicTransform, this.dynamicTransform, this.sign * rotationOffset);
         mat4.translate(this.dynamicTransform, this.dynamicTransform, this.earOffset);

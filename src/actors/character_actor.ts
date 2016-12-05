@@ -17,7 +17,6 @@
 import { Actor } from "./actor";
 import { BallActor } from "./ball_actor";
 import { EarActor } from "./ear_actor";
-import { FootActor } from "./foot_actor";
 import { RenderStyle } from "../render/renderer";
 import { Program } from "../render/shader_programs/program";
 import { mat4, vec3, vec2 } from "../lib/gl-matrix";
@@ -36,15 +35,13 @@ export class CharacterActor extends BallActor {
 
         this.leftEar = new EarActor(gl, false);
         this.rightEar = new EarActor(gl, true);
-        this.leftFoot = new FootActor(gl);
-        this.rightFoot = new FootActor(gl);
 
         // Calculate static transforms
         vec3.set(this.heightOffset, 0, 1.0, 0);
     }
 
     // Sets the position, rotation and animates by one step
-    public tick(position: vec3, forward: vec3, vertical: number, horizontal: number) {
+    public tick(position: vec3, forward: vec3, vertical: number, horizontal: number, inAir: boolean) {
         this.time += 0.016666;
         let pi = 3.14159265;
         let deg30 = pi / 6, deg90 = pi / 2;
@@ -77,8 +74,9 @@ export class CharacterActor extends BallActor {
         mat4.transpose(this.invModelTransform, this.scratchMatrix1);
 
         // Move children
-        this.leftEar.tick(this.time, this.modelTransform, this.scratchMatrix1);
-        this.rightEar.tick(this.time, this.modelTransform, this.scratchMatrix1);
+        let freq = inAir ? 4.0 : 1.0;
+        this.leftEar.tick(this.time, this.modelTransform, this.scratchMatrix1, freq);
+        this.rightEar.tick(this.time, this.modelTransform, this.scratchMatrix1, freq);
     }
 
     public draw(gl: WebGLRenderingContext, program: Program) {
@@ -94,8 +92,6 @@ export class CharacterActor extends BallActor {
     // Child actors
     private readonly leftEar : EarActor;
     private readonly rightEar: EarActor;
-    private readonly leftFoot: FootActor;
-    private readonly rightFoot: FootActor;
 
     // Transforms
     private readonly scratchMatrix1 = mat4.create();

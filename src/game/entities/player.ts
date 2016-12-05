@@ -15,7 +15,7 @@
 //
 
 import { Entity } from "./entity";
-import { vec3, mat4 } from "../../lib/gl-matrix";
+import { vec3, mat4, vec2 } from "../../lib/gl-matrix";
 import { Actor } from "../../actors/actor";
 import { ArenaActor } from "../../actors/arena_actor";
 import { CharacterActor } from "../../actors/character_actor";
@@ -35,6 +35,8 @@ export class Player extends Entity {
         this.character = actor;
         this.speed = 0.5;
         this.ground = ground;
+        vec3.set(this.lowerBounds, -25, -25, -25);
+        vec3.set(this.upperBounds, 25, 25, 25);
     }
 
     // Set's the player's direction with the given direction influences
@@ -68,8 +70,8 @@ export class Player extends Entity {
     public tick() {
         // Dampen lateral movement in the air
         if (this.isAirborne) {
-            this.direction[0] *= 0.5;
-            this.direction[2] *= 0.5;
+            this.direction[0] *= 0.75;
+            this.direction[2] *= 0.75;
         }
 
         // Add contribution in the forward direction
@@ -84,6 +86,14 @@ export class Player extends Entity {
         if (this.direction[1] !== 0) {
             this.position[1] += this.direction[1] * this.speed;
         }
+
+        // Clamp to bounds
+        vec2.set(this.scratch2Vec, this.position[0], this.position[2]);
+        let groundDistance = vec2.length(this.scratch2Vec);
+        if (groundDistance <= 2) {
+            vec3.scale(this.position, this.position, 2.0 / groundDistance);
+        }
+        vec3.min(this.position, this.upperBounds, vec3.max(this.position, this.lowerBounds, this.position));
 
         // Sample the ground height at our current location
         let floor = this.ground.sampleHeight(this.position[0], this.position[2]);
@@ -105,7 +115,7 @@ export class Player extends Entity {
         }
     
         // Move the actor to the final position
-        this.character.tick(this.position, this.forwardBasis, this.direction[2], this.direction[0]);
+        this.character.tick(this.position, this.forwardBasis, this.direction[2], this.direction[0], this.isAirborne);
     }
 
     //--------------------------------------------------------------------------
@@ -123,5 +133,10 @@ export class Player extends Entity {
 
     // Whether the player is currently in the air
     private isAirborne = false;
+
+    // Bounding box of game
+    private readonly lowerBounds = vec3.create();
+    private readonly upperBounds = vec3.create();
+    private readonly scratch2Vec = vec2.create();
 
 }
