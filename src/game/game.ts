@@ -21,9 +21,8 @@ import { Enemy } from "./entities/enemy";
 
 import { Actor } from "../actors/actor";
 import { ArenaActor } from "../actors/arena_actor";
-import { BasicActor } from "../actors/basic_actor";
-import { BallActor } from "../actors/ball_actor";
 import { CharacterActor } from "../actors/character_actor";
+import { EnemyActor } from "../actors/enemy_actor";
 
 export class Game {
 
@@ -48,8 +47,8 @@ export class Game {
 
         let arenaActor = new ArenaActor(this.gl);
         let playerActor = new CharacterActor(this.gl);
-        let enemyActor = new BallActor(this.gl);
-        
+        let enemyActor = new EnemyActor(this.gl);
+
         this.player = new Player(playerActor, arenaActor);
         this.player.position[2] = -10;
         this.enemy = new Enemy(enemyActor, arenaActor);
