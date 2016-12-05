@@ -35,6 +35,12 @@ export abstract class Actor {
     public readonly staticTransform = mat4.create();
     public readonly dynamicTransform = mat4.create();
 
+    // Scale factor of the UVs
+    public uvScale: number = 1.0;
+
+    // Edge sensitivity
+    public edgeFactor: number = 1.0;
+
     // Draws the actor for the given WebGL context
     public draw(gl: WebGLRenderingContext, program: Program) {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
@@ -73,12 +79,6 @@ export abstract class Actor {
 
     // The number of elements
     protected readonly elementCount: number;
-
-    // Scale factor of the UVs
-    protected uvScale: number = 1.0;
-
-    // Edge sensitivity
-    protected edgeFactor: number = 1.0;
 
     protected constructor(gl: WebGLRenderingContext, vboData: Float32Array, eboData: Uint16Array) {
         // Create the element buffer

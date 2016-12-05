@@ -31,6 +31,7 @@ import { Light } from "./light";
 import { Actor } from "../actors/actor";
 import { QuadActor } from "../actors/quad_actor";
 import { DebugActor } from "../actors/debug_actor";
+import { BallActor } from "../actors/ball_actor";
 
 import { WebGraphics } from "../util/webgraphics";
 import { TextureLoader, ImageTexture } from "../util/textureloader";
@@ -91,6 +92,9 @@ export class Renderer {
         this.outputQuad = new QuadActor(gl);
         this.debugQuad = new DebugActor(gl);
         this.light = new Light(0, 1, -1, 25);
+        this.skyDome = new BallActor(gl);
+        this.skyDome.uvScale = 10;
+        mat4.fromScaling(this.skyDome.modelTransform, [100, 100, 100]);
 
         // Initialize shadow rendering
         this.shadows = new RenderShadows(gl, 512);
@@ -155,6 +159,7 @@ export class Renderer {
     // Helper actors
     private readonly outputQuad: QuadActor;
     private readonly debugQuad: DebugActor;
+    private readonly skyDome: BallActor;
 
     // GBuffers
     private readonly deferredGBuffer: GBuffer;
@@ -180,6 +185,11 @@ export class Renderer {
         for (let actor of actors) {
             actor.draw(gl, shader);
         }
+
+        // Draw the sky dome
+        gl.cullFace(gl.FRONT);
+        this.skyDome.draw(gl, shader);
+        gl.cullFace(gl.BACK);
 
         // Reset state
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
