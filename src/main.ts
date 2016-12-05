@@ -45,6 +45,7 @@ function init() {
     // Create a renderer to draw the game graphics
     renderer = new Renderer(gl, textureLoader);
     if (!renderer.isReady) {
+        alert("Your browser does not support depth textures or multiple draw buffers :(");
         return;
     }
 
