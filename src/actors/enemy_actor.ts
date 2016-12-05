@@ -29,12 +29,19 @@ export class EnemyActor extends Actor {
     public constructor(gl: WebGLRenderingContext) {
         super(gl, EnemyActor.vertexData, EnemyActor.elementData);
         this.edgeFactor = 1.0;
-        mat4.fromTranslation(this.modelTransform, [0, 3, 0]);
+        mat4.fromTranslation(this.staticTransform, [0, 3.5, 0]);
+    }
+
+    public tick(time: number) {
+        this.heightVec[1] = Math.sin(time * 1.57) + 4.5;
+        mat4.fromTranslation(this.modelTransform, this.heightVec);
     }
 
     //--------------------------------------------------------------------------
     // Private members
     //--------------------------------------------------------------------------
+
+    private readonly heightVec = vec3.create();
 
     private static vertexData = new Float32Array([
         0.44633, -2.9631, -0.14502, 0.20849, -0.97463, -0.081423, 0, 0.05,

@@ -41,8 +41,7 @@ export class CharacterActor extends BallActor {
     }
 
     // Sets the position, rotation and animates by one step
-    public tick(position: vec3, forward: vec3, vertical: number, horizontal: number, inAir: boolean) {
-        this.time += 0.016666;
+    public tick(time: number, position: vec3, forward: vec3, vertical: number, horizontal: number, inAir: boolean) {
         let pi = 3.14159265;
         let deg30 = pi / 6, deg90 = pi / 2;
 
@@ -75,8 +74,8 @@ export class CharacterActor extends BallActor {
 
         // Move children
         let freq = inAir ? 4.0 : 1.0;
-        this.leftEar.tick(this.time, this.modelTransform, this.scratchMatrix1, freq);
-        this.rightEar.tick(this.time, this.modelTransform, this.scratchMatrix1, freq);
+        this.leftEar.tick(time, this.modelTransform, this.scratchMatrix1, freq);
+        this.rightEar.tick(time, this.modelTransform, this.scratchMatrix1, freq);
     }
 
     public draw(gl: WebGLRenderingContext, program: Program) {
@@ -102,7 +101,4 @@ export class CharacterActor extends BallActor {
     private readonly destRotation = vec2.create();
     private readonly curRotation = vec2.create();
     private readonly tweenRotation = vec2.create();
-
-    private time = 0;
-
 }

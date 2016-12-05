@@ -36,6 +36,6 @@ export abstract class Entity {
     }
 
     // Moves the entity one step
-    public abstract tick(): void;
+    public abstract tick(time: number): void;
 
 }

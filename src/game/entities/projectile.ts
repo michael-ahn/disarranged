@@ -17,6 +17,7 @@
 import { Entity } from "./entity";
 import { vec3, mat4 } from "../../lib/gl-matrix";
 import { Actor } from "../../actors/actor";
+import { MissileActor } from "../../actors/missile_actor";
 import { ArenaActor } from "../../actors/arena_actor";
 
 export class Projectile extends Entity {
@@ -25,61 +26,76 @@ export class Projectile extends Entity {
     // Public members
     //--------------------------------------------------------------------------
 
-    public constructor(actor: Actor, ground: ArenaActor) {
+    public readonly missile: MissileActor;
+
+    public constructor(actor: MissileActor, ground: ArenaActor) {
         super(actor);
+        this.speed = 0.75;
+        this.missile = actor;
         this.ground = ground;
-        this.speed = 3.0;
+        this.dead = true;
+        this.missile.isVisible = false;
     }
 
-    public setTarget(target: Entity, hitCallback: () => void) {
+    public setTarget(target: Entity, position: vec3, direction: vec3, hitCallback: (hit: boolean) => void) {
+        // Configure target
         this.target = target;
         this.hitCallback = hitCallback;
-        vec3.subtract(this.direction, target.position, this.position);
-        vec3.normalize(this.direction, this.direction);
-        this.isDead = false;
+        this.dead = false;
+        this.missile.isVisible = true;
+        // Set travel direction and position
+        vec3.copy(this.position, position);
+        vec3.normalize(this.direction, direction);
+        this.missile.setFacing(this.direction);
     }
 
-    public tick() {
-        if (this.isDead) {
+    public kill(hit: boolean) {
+        this.dead = true;
+        this.missile.isVisible = false;
+        if (this.hitCallback) {
+            this.hitCallback(hit);
+        }
+    }
+
+    public tick(time: number) {
+        if (this.dead) {
             return;
         }
 
         // Check for hits
         let targetDist = vec3.distance(this.position, this.target.position);
         if (targetDist < this.hitRadius) {
-            this.isDead = true;
-            if (this.hitCallback) {
-                this.hitCallback();
-            }
+            this.kill(true);
             return;
         }
 
         // Check collision with ground
         let floor = this.ground.sampleHeight(this.position[0], this.position[2]);
-        if (Math.abs(floor - this.position[1]) < this.hitRadius / 2) {
-            this.isDead = true;
+        if (this.position[1] < floor + this.hitRadius / 4) {
+            this.kill(false);
             return;
         }
 
         // Check out of range
         let travelDist = vec3.length(this.position);
-        if (travelDist > 30) {
-            this.isDead = true;
+        if (travelDist > 70) {
+            this.kill(false);
             return;
         }
 
         vec3.scaleAndAdd(this.position, this.position, this.direction, this.speed);
+        this.missile.tick(time, this.position);
     }
 
     //--------------------------------------------------------------------------
     // Private members
     //--------------------------------------------------------------------------
 
-    private ground: ArenaActor;
+    private readonly ground: ArenaActor;
     private hitRadius = 2;
     private target: Entity;
-    private hitCallback: () => void;
-    private isDead: boolean;
+    private hitCallback: (hit: boolean) => void;
+    private dead: boolean;
     private readonly scratchVec: vec3;
 
 }

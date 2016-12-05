@@ -23,6 +23,7 @@ import { Actor } from "../actors/actor";
 import { ArenaActor } from "../actors/arena_actor";
 import { CharacterActor } from "../actors/character_actor";
 import { EnemyActor } from "../actors/enemy_actor";
+import { MissileActor } from "../actors/missile_actor";
 
 export class Game {
 
@@ -39,6 +40,9 @@ export class Game {
     // The enemy's data object
     public readonly enemy: Enemy;
 
+    // All missile objects
+    public readonly missiles: MissileActor[] = [];
+
     // Ground object
     public readonly ground: ArenaActor;
 
@@ -49,12 +53,18 @@ export class Game {
         let playerActor = new CharacterActor(this.gl);
         let enemyActor = new EnemyActor(this.gl);
 
+        let missileCount = 10;
+        for (let i = 0; i < missileCount; ++i) {
+            this.missiles.push(new MissileActor(gl));
+        }
+
         this.player = new Player(playerActor, arenaActor);
         this.player.position[2] = -10;
-        this.enemy = new Enemy(enemyActor, arenaActor);
+        this.enemy = new Enemy(enemyActor, arenaActor, this.player, this.missiles);
         this.ground = arenaActor;
 
         this.actors = [ arenaActor, playerActor, enemyActor ];
+        this.actors = this.actors.concat(this.missiles);
 
         // Hook up player actions
         input.registerEvent(KeyCode.SPACE, () => this.player.jump());
@@ -62,6 +72,8 @@ export class Game {
 
     // Progresses the game state by one tick
     public tick(input: Keyboard) {
+        this.time += 0.0166666;
+
         // Update the player's orientation
         this.player.orientMovement(this.enemy);
 
@@ -69,8 +81,9 @@ export class Game {
         let verticalInput = input.isKeyDown(KeyCode.UP) ? 1 : (input.isKeyDown(KeyCode.DOWN) ? -1 : 0);
         let horizontalInput = input.isKeyDown(KeyCode.LEFT) ? 1 : (input.isKeyDown(KeyCode.RIGHT) ? -1 : 0);
         this.player.setDirection(verticalInput, horizontalInput);
-        this.player.tick();
-
+        this.player.tick(this.time);
+        
+        this.enemy.tick(this.time);
     }
 
     //--------------------------------------------------------------------------
@@ -78,4 +91,6 @@ export class Game {
     //--------------------------------------------------------------------------
 
     private readonly gl: WebGLRenderingContext;
+
+    private time = 0;
 }

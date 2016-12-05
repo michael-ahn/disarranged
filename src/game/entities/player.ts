@@ -67,7 +67,7 @@ export class Player extends Entity {
     }
 
     // Move the player one step
-    public tick() {
+    public tick(time: number) {
         // Dampen lateral movement in the air
         if (this.isAirborne) {
             this.direction[0] *= 0.75;
@@ -101,7 +101,7 @@ export class Player extends Entity {
         // Ground the player if they're jumping and hit the ground
         if (this.isAirborne) {
             // Apply gravity to the player
-            this.direction[1] -= 0.03;
+            this.direction[1] -= 0.05;
 
             // Ground the player if they hit the ground while falling
             if (this.direction[1] < 0 && this.position[1] <= floor) {
@@ -115,7 +115,7 @@ export class Player extends Entity {
         }
     
         // Move the actor to the final position
-        this.character.tick(this.position, this.forwardBasis, this.direction[2], this.direction[0], this.isAirborne);
+        this.character.tick(time, this.position, this.forwardBasis, this.direction[2], this.direction[0], this.isAirborne);
     }
 
     //--------------------------------------------------------------------------
