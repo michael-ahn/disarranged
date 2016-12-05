@@ -30,7 +30,7 @@ export class Projectile extends Entity {
 
     public constructor(actor: MissileActor, ground: ArenaActor) {
         super(actor);
-        this.speed = 0.75;
+        this.speed = 1.0;
         this.missile = actor;
         this.ground = ground;
         this.dead = true;
@@ -63,7 +63,9 @@ export class Projectile extends Entity {
         }
 
         // Check for hits
-        let targetDist = vec3.distance(this.position, this.target.position);
+        vec3.copy(this.scratchVec, this.target.position);
+        this.scratchVec[1] += 0.5;
+        let targetDist = vec3.distance(this.position, this.scratchVec);
         if (targetDist < this.hitRadius) {
             this.kill(true);
             return;
@@ -96,6 +98,6 @@ export class Projectile extends Entity {
     private target: Entity;
     private hitCallback: (hit: boolean) => void;
     private dead: boolean;
-    private readonly scratchVec: vec3;
+    private readonly scratchVec = vec3.create();
 
 }
