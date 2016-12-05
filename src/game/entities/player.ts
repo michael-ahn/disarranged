@@ -35,8 +35,8 @@ export class Player extends Entity {
         this.character = actor;
         this.speed = 0.5;
         this.ground = ground;
-        vec3.set(this.lowerBounds, -25, -25, -25);
-        vec3.set(this.upperBounds, 25, 25, 25);
+        vec3.set(this.lowerBounds, -50, -50, -50);
+        vec3.set(this.upperBounds, 50, 50, 50);
     }
 
     // Set's the player's direction with the given direction influences
@@ -127,9 +127,6 @@ export class Player extends Entity {
 
     // The ground object to collide with
     private readonly ground: ArenaActor;
-
-    // The current moving direction of the player, based on input
-    private readonly direction = vec3.create();
 
     // Whether the player is currently in the air
     private isAirborne = false;

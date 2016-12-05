@@ -25,6 +25,9 @@ export abstract class Entity {
     // The current position in world space
     public readonly position = vec3.create();
 
+    // The current direction of movement
+    public readonly direction = vec3.create();
+
     // The distance travelled per game tick
     public speed = 0;
 

@@ -91,7 +91,7 @@ export class Renderer {
         // Create and initialize actors and objects
         this.outputQuad = new QuadActor(gl);
         this.debugQuad = new DebugActor(gl);
-        this.light = new Light(0, 1, -1, 25);
+        this.light = new Light(0, 1, -1, 50);
         this.skyDome = new BallActor(gl);
         this.skyDome.uvScale = 10;
         mat4.fromScaling(this.skyDome.modelTransform, [100, 100, 100]);

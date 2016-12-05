@@ -40,6 +40,9 @@ export class Game {
     // The enemy's data object
     public readonly enemy: Enemy;
 
+    // Ground object
+    public readonly ground: ArenaActor;
+
     public constructor(gl: WebGLRenderingContext, input: Keyboard) {
         this.gl = gl;
 
@@ -50,6 +53,7 @@ export class Game {
         this.player = new Player(playerActor, arenaActor);
         this.player.position[2] = -10;
         this.enemy = new Enemy(enemyActor, arenaActor);
+        this.ground = arenaActor;
 
         this.actors = [ arenaActor, playerActor, enemyActor ];
 
@@ -75,7 +79,4 @@ export class Game {
     //--------------------------------------------------------------------------
 
     private readonly gl: WebGLRenderingContext;
-
-    private readonly arena: ArenaActor;
-
 }

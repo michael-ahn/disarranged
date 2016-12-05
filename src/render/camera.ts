@@ -17,6 +17,7 @@
 import { mat4, vec3 } from "../lib/gl-matrix";
 import { Entity } from "../game/entities/entity";
 import { Player } from "../game/entities/player";
+import { ArenaActor } from "../actors/arena_actor";
 
 export class Camera {
 
@@ -46,12 +47,14 @@ export class Camera {
     }
 
     // Looks at the target from the position of the player in 3rd person
-    public follow(player: Player, target: Entity) {
+    public follow(player: Player, target: Entity, ground: ArenaActor) {
         // Look at the target
         this.lookPosition.set(target.position);
         // View from player but behind by some distance
         vec3.scaleAndAdd(this.eyePosition, player.position, player.forwardBasis, -10);
-        this.eyePosition[1] += 5; // Raise camera
+        // Keep camera above ground
+        let floor = ground.sampleHeight(this.eyePosition[0], this.eyePosition[2]);
+        this.eyePosition[1] = Math.max(this.eyePosition[1] + 5, floor + 2.5);
         this.update();
     }
 
